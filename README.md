@@ -1,2 +1,2 @@
 # ddp
-Differential Dynamic Programming
+##(~Differential Dynamic Programming~)
