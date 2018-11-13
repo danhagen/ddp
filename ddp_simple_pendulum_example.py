@@ -13,19 +13,6 @@ X1: angle of pendulum
 X2: angular velocity of pendulum
 
 """
-m = 1 # kg
-L = 0.5 # m
-g = 9.8 # m/s²
-b = 10 # Nms
-
-TargetAngle = np.pi #in radians
-TargetAngularVelocity = 0 #in radians
-
-t1 = 1
-t2 = 1
-k1 = 1000
-k2 = 1000
-
 def dx1_dt(X,U):
     return(X[1])
 def dx2_dt(X,U):
@@ -194,6 +181,15 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     #Pendulum Angle
 
+    # Angle, = ax2.plot([0],[X1d[0]%360],color = 'r')
+    # ax2.set_xlim(0,Time[-1])
+    # ax2.set_xticks(list(np.linspace(0,Time[-1],5)))
+    # ax2.set_xticklabels([str(0),'','','',str(Time[-1])])
+    # ax2.set_ylim(0,360)
+    # ax2.spines['right'].set_visible(False)
+    # ax2.spines['top'].set_visible(False)
+    # ax2.set_title("Pendulum Angle (deg)",fontsize=16,fontweight = 4,color = 'r',y = 1.05)
+
     Angle, = ax2.plot([0],[X1d[0]],color = 'r')
     ax2.set_xlim(0,Time[-1])
     ax2.set_xticks(list(np.linspace(0,Time[-1],5)))
@@ -202,7 +198,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         ax2.set_ylim([X1d[0]-2,X1d[0]+2])
     else:
         RangeX1d= max(X1d)-min(X1d)
-        ax2.set_ylim([min(X1d)-0.1*RangeX1d,max(X1d)+0.1*RangeX1d])
+        ax2.set_ylim([min(X1d)-0.15*RangeX1d,max(X1d)+0.15*RangeX1d])
     ax2.spines['right'].set_visible(False)
     ax2.spines['top'].set_visible(False)
     ax2.set_title("Pendulum Angle (deg)",fontsize=16,fontweight = 4,color = 'r',y = 1.05)
@@ -396,7 +392,6 @@ def return_linearized_dynamics_matrices(X,U,dt):
         )
     return(Phi,B)
 
-# for case where time to target is penalized. Hoping to create steady state.
 def return_l_func(RunningCost='Minimize Input Energy'):
     """
     Should use the current timestep, not the t + dt (or prime notation).
@@ -418,7 +413,7 @@ def return_l_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', or 'Minimize time away from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.matrix([[(1/2)*U**2*dt]])
+        result1 = lambda X,U,dt: np.matrix([[(k3/2)*U**2*dt]])
     else:
         result1 = lambda X,U,dt: np.matrix([[0]])
 
@@ -498,7 +493,7 @@ def return_lu_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', or 'Minimize time away from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.matrix([[U*dt]])
+        result1 = lambda X,U,dt: np.matrix([[k3*U*dt]])
     else:
         result1 = lambda X,U,dt: np.matrix([[0]])
 
@@ -614,7 +609,7 @@ def return_luu_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', or 'Minimize time away from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.matrix([[dt]])
+        result1 = lambda X,U,dt: np.matrix([[k3*dt]])
     else:
         result1 = lambda X,U,dt: np.matrix([[0]])
 
@@ -785,7 +780,7 @@ def return_running_cost_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', or 'Minimize time away from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.trapz((1/2)*U**2,dx=dt)
+        result1 = lambda X,U,dt: np.trapz((k3/2)*U**2,dx=dt)
     else:
         result1 = lambda X,U,dt: 0
 
@@ -825,10 +820,10 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
                 "Each element of TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize final angle from target angle" in TerminalCost:
-        result1 = lambda X,U,dt: t1*(1/2)*(X[0,-1]-TargetAngle)**2
+        result1 = lambda X,U,dt: k4*(1/2)*(X[0,-1]-TargetAngle)**2
         result1_grad = lambda X,U,dt:\
-            np.matrix([[t1*(X[0,-1]-TargetAngle)],[0]])
-        result1_hess = lambda X,U,dt: np.matrix([[t1*1,0],[0,0]])
+            np.matrix([[k4*(X[0,-1]-TargetAngle)],[0]])
+        result1_hess = lambda X,U,dt: np.matrix([[k4*1,0],[0,0]])
     else:
         result1 = lambda X,U,dt: 0
         result1_grad = lambda X,U,dt:\
@@ -836,10 +831,10 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
         result1_hess = lambda X,U,dt: np.matrix([[0,0],[0,0]])
 
     if "Minimize final angular velocity from target angular velocity" in TerminalCost:
-        result2 = lambda X,U,dt: t2*(1/2)*(X[1,-1]-TargetAngularVelocity)**2
+        result2 = lambda X,U,dt: k5*(1/2)*(X[1,-1]-TargetAngularVelocity)**2
         result2_grad = lambda X,U,dt:\
-            np.matrix([[0],[t2*(X[1,-1]-TargetAngularVelocity)]])
-        result2_hess = lambda X,U,dt: np.matrix([[0,0],[0,t2*1]])
+            np.matrix([[0],[k5*(X[1,-1]-TargetAngularVelocity)]])
+        result2_hess = lambda X,U,dt: np.matrix([[0,0],[0,k5*1]])
     else:
         result2 = lambda X,U,dt: 0
         result2_grad = lambda X,U,dt:\
@@ -933,17 +928,23 @@ def simple_pendulum_ddp(**kwargs):
     PlotCost = kwargs.get("PlotCost",True)
     assert type(PlotCost)==bool, "PlotCost must be either True (Default) or False."
 
+    thresh = kwargs.get("thresh",1e-2)
+    assert str(type(thresh)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+        "thresh must be a number."
+
+
     TotalX = []
     TotalU = []
 
     Time = np.arange(0,N_seconds + dt,dt)
 
-    U = kwargs.get("U",2*np.ones(len(Time)-1)) # initial input guess
+    U = kwargs.get("U",2*np.ones(len(Time)-1)) # initial input
     assert len(U)==len(Time)-1, "U must be an array with length len(Time)-1."
 
     TrialCosts = []
     IterationNumber = 1
-    while IterationNumber <= N_iterations:
+    ThresholdNotMet=True
+    while IterationNumber <= N_iterations and ThresholdNotMet:
         print(
             "Iteration Number : "
             + str(IterationNumber)
@@ -957,13 +958,17 @@ def simple_pendulum_ddp(**kwargs):
                 dt=dt,
                 N_seconds=N_seconds,
                 ReturnX=True)
+
         TotalX.append(X)
         TotalU.append(U)
-
         TrialCosts.append(
                terminal_cost_func(X,U,dt)
                + running_cost_func(X,U,dt)
                )
+        if IterationNumber>3:
+            if abs(np.average(TrialCosts[-3:])-TrialCosts[-1]) < thresh:
+                ThresholdNotMet = False
+                print("Threshold met after " + str(IterationNumber) + " Trials")
 
         Phi,B = return_linearized_dynamics_matrices(X,U,dt)
         l,lx,lu,lux,lxu,luu,lxx = \
@@ -1026,7 +1031,7 @@ def simple_pendulum_ddp(**kwargs):
         IterationNumber+=1
 
     X = forward_integrate_dynamics(
-            [0,0],
+            ICs,
             U=U,
             dt=dt,
             N_seconds=N_seconds,
@@ -1038,14 +1043,39 @@ def simple_pendulum_ddp(**kwargs):
            + running_cost_func(X,U,dt)
            )
     if Animate==True:
+        if "U" in kwargs.keys(): del(kwargs["U"]) # prevents multiple instances of U going into animate_trajectory()
         animate_trajectory(Time,X,U,**kwargs)
 
     if PlotCost==True:
-        plt.figure()
+        plt.figure(figsize=(7,5))
         plt.plot(
-            list(range(N_iterations+1)),
+            list(range(1,len(TrialCosts)+1)),
             TrialCosts,
             marker = 'o')
+        plt.gca().set_ylabel("Cost")
+        plt.gca().set_xlabel("Iteration Number")
+        plt.gca().set_xticks(list(range(1,6*int((len(TrialCosts)+1)/5),int((len(TrialCosts)+1)/5))))
         plt.show()
 
     return(Time,TotalX,TotalU,TrialCosts)
+
+m = 1 # kg
+L = 0.5 # m
+g = 9.8 # m/s²
+b = 10 # Nms
+
+k1 = 1000
+k2 = 1000
+k3 = 1
+k4 = 1
+k5 = 1
+
+TargetAngle = np.pi #in radians
+TargetAngularVelocity = 0 #in radians
+
+RunningCost = ["Minimize Input Energy",
+                "Minimize time away from target angle",
+                "Minimize time away from target angular velocity"][:]
+
+TerminalCost = ["Minimize final angle from target angle",
+                "Minimize final angular velocity from target angular velocity"][:]
