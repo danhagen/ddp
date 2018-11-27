@@ -465,6 +465,29 @@ def animate_trajectory(Time,X,U,**kwargs):
     Cart_Height = 2*L
     Wheel_Radius = 0.125*Cart_Width
     # Model Drawing
+    marker_interdistance = 25
+    lowest_marker = marker_interdistance* \
+            (int(np.floor(X[1].min())/marker_interdistance)-1)
+    highest_marker = marker_interdistance* \
+            (int(np.ceil(X[1].max())/marker_interdistance)+2)
+    markers = np.arange(
+            lowest_marker,
+            highest_marker,
+            marker_interdistance
+            )
+    marker_str = []
+    for marker in markers:
+        if marker%100==0:
+            marker_str.append(str(int(marker)))
+        else:
+            marker_str.append("")
+
+    Markers = ax0.scatter(
+                markers-X[1,0],
+                -0.90*(Cart_Height/2 + Wheel_Radius*2)*np.ones(len(markers)),
+                marker="|",
+                c="k",
+                s=2000)
 
     Cart = plt.Rectangle(
                 (X[1,0]-Cart_Width/2,-Cart_Height/2),
@@ -521,15 +544,17 @@ def animate_trajectory(Time,X,U,**kwargs):
         lw=2
         )
 
-    if max(abs(X[1,:]-X[1,0]))<1e-7:
-        MinimumX = X[1,0]-10
-        MaximumX = X[1,0]+10
-    elif max(abs(X[1,:]-X[1,0]))<2:
-        MinimumX = min(X[1,:])-1.25*Cart_Width/2-5
-        MaximumX = max(X[1,:])+1.25*Cart_Width/2+5
-    else:
-        MinimumX = min(X[1,:])-1.25*Cart_Width/2
-        MaximumX = max(X[1,:])+1.25*Cart_Width/2
+    MinimumX = X[1,0]-13
+    MaximumX = X[1,0]+13
+    # if max(abs(X[1,:]-X[1,0]))<1e-7:
+    #     MinimumX = X[1,0]-10
+    #     MaximumX = X[1,0]+10
+    # elif max(abs(X[1,:]-X[1,0]))<2:
+    #     MinimumX = min(X[1,:])-1.25*Cart_Width/2-5
+    #     MaximumX = max(X[1,:])+1.25*Cart_Width/2+5
+    # else:
+    #     MinimumX = min(X[1,:])-1.25*Cart_Width/2
+    #     MaximumX = max(X[1,:])+1.25*Cart_Width/2
 
     Ground = plt.Rectangle(
                 (MinimumX,-1.50*(Cart_Height/2 + Wheel_Radius*2)),
@@ -629,21 +654,45 @@ def animate_trajectory(Time,X,U,**kwargs):
     ax5.set_title("Cart Velocity (m/s)",fontsize=16,fontweight = 4,color = 'g',y = 0.95)
 
     def animate(i):
-        Cart.xy = (X[1,i]-Cart_Width/2,-Cart_Height/2)
+        # Cart.xy = (X[1,i]-Cart_Width/2,-Cart_Height/2)
+        #
+        # FrontWheel.center = (X[1,i]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        # FrontWheel_Rivet.center = (X[1,i]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        #
+        # BackWheel.center = (X[1,i]-Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        # BackWheel_Rivet.center = (X[1,i]-Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        #
+        # Pendulum.set_xdata([X[1,i],X[1,i] + Pendulum_Length*np.sin(X[0,i])])
+        # Pendulum.set_ydata([Cart_Height/2 + Pendulum_Width/2,
+        #                     Cart_Height/2 + Pendulum_Width/2 + Pendulum_Length*np.cos(X[0,i])])
+        #
+        # Pendulum_Attachment.center = (X[1,i],Cart_Height/2)
+        #
+        # Pendulum_Rivet.set_xdata([X[1,i]])
 
-        FrontWheel.center = (X[1,i]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
-        FrontWheel_Rivet.center = (X[1,i]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        offset = np.concatenate([
+                (markers-X[1,i])[:,np.newaxis],
+                (-0.90*(Cart_Height/2 + Wheel_Radius*2)
+                    * np.ones(len(markers)))[:,np.newaxis]
+                ],
+                axis=1)
+        Markers.set_offsets(offset)
 
-        BackWheel.center = (X[1,i]-Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
-        BackWheel_Rivet.center = (X[1,i]-Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        Cart.xy = (X[1,0]-Cart_Width/2,-Cart_Height/2)
 
-        Pendulum.set_xdata([X[1,i],X[1,i] + Pendulum_Length*np.sin(X[0,i])])
+        FrontWheel.center = (X[1,0]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        FrontWheel_Rivet.center = (X[1,0]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+
+        BackWheel.center = (X[1,0]-Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+        BackWheel_Rivet.center = (X[1,0]-Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
+
+        Pendulum.set_xdata([X[1,0],X[1,0] + Pendulum_Length*np.sin(X[0,i])])
         Pendulum.set_ydata([Cart_Height/2 + Pendulum_Width/2,
                             Cart_Height/2 + Pendulum_Width/2 + Pendulum_Length*np.cos(X[0,i])])
 
-        Pendulum_Attachment.center = (X[1,i],Cart_Height/2)
+        Pendulum_Attachment.center = (X[1,0],Cart_Height/2)
 
-        Pendulum_Rivet.set_xdata([X[1,i]])
+        Pendulum_Rivet.set_xdata([X[1,0]])
 
         Input.set_xdata(Time[:i])
         Input.set_ydata(U[:i])
@@ -660,10 +709,17 @@ def animate_trajectory(Time,X,U,**kwargs):
         AngularVelocity.set_xdata(Time[:i])
         AngularVelocity.set_ydata(X2d[:i])
 
-        return Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Input,Position,Angle,Velocity,AngularVelocity,
+        return Markers,Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Input,Position,Angle,Velocity,AngularVelocity,
 
     # Init only required for blitting to give a clean slate.
     def init():
+        Markers = plt.scatter(
+                    markers-X[1,0],
+                    -0.90*(Cart_Height/2 + Wheel_Radius*2)*np.ones(len(markers)),
+                    marker="^",
+                    c="k",
+                    s=2000)
+
         Cart = plt.Rectangle(
                     (X[1,0]-Cart_Width/2,-Cart_Height/2),
                     Cart_Width,
@@ -745,6 +801,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
         Velocity, = ax5.plot([0],[X[3,0]],color = 'g--')
 
+        Markers.set_visible(False)
         Cart.set_visible(False)
         FrontWheel.set_visible(False)
         FrontWheel_Rivet.set_visible(False)
@@ -760,10 +817,16 @@ def animate_trajectory(Time,X,U,**kwargs):
         Velocity.set_visible(False)
         AngularVelocity.set_visible(False)
 
-        return Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Ground,Input,Position,Angle,Velocity,
+        return Markers,Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Ground,Input,Position,Angle,Velocity,
 
     dt = Time[1]-Time[0]
-    ani = animation.FuncAnimation(fig, animate, frames=np.arange(0,len(Time)-1,2000),init_func=init, blit=False)
+    if dt <= 0.0001:
+        framestep=2000
+    elif dt <= 0.001:
+        framestep=200
+    elif dt <= 0.01:
+        framestep=10
+    ani = animation.FuncAnimation(fig, animate, frames=np.arange(0,len(Time)-1,framestep),init_func=init, blit=False)
     if SaveAsGif==True:
         ani.save('simple_pendulum_ddp_01.gif', writer='imagemagick', fps=10)
     plt.show()
@@ -959,7 +1022,7 @@ def return_l_func(RunningCost='Minimize Input Energy'):
         result1 = lambda X,U,dt: np.matrix([[0]])
 
     if "Minimize time away from target angle" in RunningCost:
-        result2 = lambda X,U,dt: np.matrix([[k1*(1/2)*(X[0]-TargetAngle)**2*dt]])
+        result2 = lambda X,U,dt: np.matrix([[k1*(1/2)*(X[0]%(2*np.pi)-TargetAngle)**2*dt]])
     else:
         result2 = lambda X,U,dt: np.matrix([[0]])
 
@@ -1009,7 +1072,7 @@ def return_lx_func(RunningCost='Minimize Input Energy'):
         result1 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
 
     if "Minimize time away from target angle" in RunningCost:
-        result2 = lambda X,U,dt: np.matrix([[k1*(X[0]-TargetAngle)*dt],[0],[0],[0]])
+        result2 = lambda X,U,dt: np.matrix([[k1*(X[0]%(2*np.pi)-TargetAngle)*dt],[0],[0],[0]])
     else:
         result2 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
 
@@ -1415,7 +1478,7 @@ def return_running_cost_func(RunningCost='Minimize Input Energy'):
         result1 = lambda X,U,dt: 0
 
     if "Minimize time away from target angle" in RunningCost:
-        result2 = lambda X,U,dt: np.trapz(k1*(1/2)*(X[0,1:]-TargetAngle)**2,dx=dt)
+        result2 = lambda X,U,dt: np.trapz(k1*(1/2)*(X[0,1:]%(2*np.pi)-TargetAngle)**2,dx=dt)
     else:
         result2 = lambda X,U,dt: 0
 
@@ -1457,9 +1520,9 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
                 "Each element of TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize final angle from target angle" in TerminalCost:
-        result1 = lambda X,U,dt: k4*(1/2)*(X[0,-1]-TargetAngle)**2
+        result1 = lambda X,U,dt: k4*(1/2)*(X[0,-1]%(2*np.pi)-TargetAngle)**2
         result1_grad = lambda X,U,dt:\
-            np.matrix([[k4*(X[0,-1]-TargetAngle)],[0],[0],[0]])
+            np.matrix([[k4*(X[0,-1]%(2*np.pi)-TargetAngle)],[0],[0],[0]])
         result1_hess = lambda X,U,dt: np.matrix(
                                 [[k4*1,0,0,0],
                                 [0,0,0,0],
@@ -1718,15 +1781,15 @@ m1 = 10 # kg
 m2 = 1 # kg
 L = 0.5 # m
 g = 9.8 # m/s²
-b1 = 10 # kg/s - Damping coefficient for cart position
+b1 = 0 # kg/s - Damping coefficient for cart position
 b2 = 10 # Nms - Damping coefficient for pendulum angle
 
-k1 = 1000 # weight of "Minimize time away from target angle" in RunningCost
-k2 = 1000 # weight of "Minimize time away from target angular velocity" in RunningCost
+k1 = 100 # weight of "Minimize time away from target angle" in RunningCost
+k2 = 100 # weight of "Minimize time away from target angular velocity" in RunningCost
 k3 = 1 # weight of "Minimize Input Energy" in RunningCost
 k4 = 1 # weight of 'Minimize final angle from target angle' in TerminalCost
 k5 = 1 # weight of  'Minimize final angular velocity from target angular velocity' in TerminalCost
-k6 = 1 # weight of "Minimize time away from initial position" in RunningCost
+k6 = 100 # weight of "Minimize time away from initial position" in RunningCost
 
 TargetAngle = 0 #in radians
 TargetAngularVelocity = 0 #in radians
