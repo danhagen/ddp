@@ -51,7 +51,7 @@ def forward_integrate_dynamics(
     assert type(ICs)==list and len(ICs)==2, "ICs must be a list of length 2."
     LocationStrings = ["1st", "2nd"]
     for i in range(2):
-        assert str(type(ICs[i])) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+        assert str(type(ICs[i])) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
             "ICs must be numbers. Check the " + LocationString[i] + " element of IC"
 
     assert type(UsingDegrees)==bool, "UsingDegrees must be either True or False."
@@ -59,11 +59,11 @@ def forward_integrate_dynamics(
     assert type(Animate)==bool, "Animate must be either True or False."
 
     dt = kwargs.get("dt",0.0001)
-    assert str(type(dt)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(dt)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "dt must be a number."
 
     N_seconds = kwargs.get("N_seconds",10)
-    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "N_seconds must be a number."
 
     Time = np.arange(0,N_seconds+dt,dt)
@@ -120,7 +120,7 @@ def animate_trajectory(Time,X,U,**kwargs):
     FileName = kwargs.get("FileName","ddp_simple_pendulum")
     if FileName is not None:
         assert type(FileName)==str,"FileName must be a str."
-    
+
         # Angles must be in degrees for animation
 
     X1d = X[0,:]*(180/np.pi)
@@ -306,7 +306,7 @@ def animate_trajectory(Time,X,U,**kwargs):
     dt = Time[1]-Time[0]
     ani = animation.FuncAnimation(fig, animate, frames=np.arange(0,len(Time)-1,10), init_func=init, blit=False)
     if SaveAsGif==True:
-        ani.save(FileName+'.gif', writer='imagemagick', fps=10)
+        ani.save("visualizations_simple_pendulum/"+FileName+'.gif', writer='imagemagick', fps=10)
     plt.show()
 
 def return_Phi(X,U,dt):
@@ -318,7 +318,8 @@ def return_Phi(X,U,dt):
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
-            "<class 'numpy.float64'>"],\
+            "<class 'numpy.float64'>",
+            "<class 'numpy.int64'>"],\
         "U must be a number. Not " + str(type(U)) + "."
     result = (np.eye(2)
         + np.matrix(
@@ -343,7 +344,8 @@ def return_B(X,U,dt):
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
-            "<class 'numpy.float64'>"],\
+            "<class 'numpy.float64'>",
+            "<class 'numpy.int64'>"],\
         "U must be a number. Not " + str(type(U)) + "."
     result = (
         np.matrix(
@@ -909,22 +911,26 @@ def simple_pendulum_ddp(**kwargs):
         assert str(type(ICs[i])) in [
                 "<class 'numpy.float'>",
                 "<class 'int'>",
-                "<class 'float'>"],\
+                "<class 'float'>",
+                "<class 'numpy.int64'>",
+                "<class 'numpy.float64'>"],\
             "ICs must be numbers. Check the " + LocationString[i] + " element of IC"
 
     dt = kwargs.get("dt",0.01)
     assert str(type(dt)) in [
             "<class 'numpy.float'>",
             "<class 'int'>",
-            "<class 'float'>"],\
+            "<class 'float'>",
+            "<class 'numpy.int64'>",
+            "<class 'numpy.float64'>"],\
         "dt must be a number."
 
     N_seconds = kwargs.get("N_seconds",10)
-    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "N_seconds must be a number."
 
     N_iterations = kwargs.get("N_iterations",10)
-    assert str(type(N_iterations)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(N_iterations)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "N_iterations must be a number."
 
     Animate = kwargs.get("Animate",True)
@@ -934,7 +940,7 @@ def simple_pendulum_ddp(**kwargs):
     assert type(PlotCost)==bool, "PlotCost must be either True (Default) or False."
 
     thresh = kwargs.get("thresh",1e-2)
-    assert str(type(thresh)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(thresh)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "thresh must be a number."
 
 

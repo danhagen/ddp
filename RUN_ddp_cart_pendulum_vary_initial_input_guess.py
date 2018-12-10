@@ -6,9 +6,23 @@ dt = 0.1
 params = {}
 # Perturbation_length = 0.1
 InitialAngle = np.arange(5,180,5)
-Perturbation_size = np.arange(0,1100,100)
+Perturbation_size = np.arange(0,1100,50)
 # U[:int(Perturbation_length/dt)] = Perturbation_size*np.ones((int(Perturbation_length/dt)))
 Time_Constant = np.arange(0.05,1.05,0.05)
+
+RunningCost = [
+        "Minimize Input Energy",
+        "Minimize time away from target angle"
+    ]
+
+TerminalCost=[
+        "Minimize final angle from target angle"
+    ]
+
+successValueFunction = return_running_cost_func(
+        RunningCost=["Minimize time away from target angle"]
+    )
+
 for k in range(len(InitialAngle)):
     for j in range(len(Perturbation_size)):
         for i in range(len(Time_Constant)):
@@ -21,13 +35,8 @@ for k in range(len(InitialAngle)):
                     Perturbation_size[j]*np.exp(-t/Time_Constant[i])
                 for t in np.arange(0,N_seconds,dt)])
             Time,TotalX,TotalU,TrialCosts = cart_pendulum_ddp(
-                RunningCost=[
-                        "Minimize Input Energy",
-                        "Minimize time away from target angle"
-                    ],
-                TerminalCost=[
-                        "Minimize final angle from target angle"
-                    ],
+                RunningCost=RunningCost,
+                TerminalCost=TerminalCost,
                 N_iterations=100,
                 N_seconds=N_seconds,
                 ICs=[0,InitialAngle[k],0,0],
@@ -39,7 +48,12 @@ for k in range(len(InitialAngle)):
                 Animate=False,
                 PlotCost=False
             )
-            if TrialCosts[-1]<3000:
+            successValue = successValueFunction(
+                    TotalX[-1][:,int((N_seconds/dt)/2):],
+                    TotalU[-1][int((N_seconds/dt)/2):],
+                    dt
+                )
+            if successValue<1000:
                 print("Successful trial for Time Constant = " + str(Time_Constant[i]))
                 # animate_trajectory(Time,TotalX[-1],TotalU[-1])
                 params["Trial " + str(i+1)] = {
