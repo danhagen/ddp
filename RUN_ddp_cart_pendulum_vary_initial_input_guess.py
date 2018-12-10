@@ -1,14 +1,15 @@
 from ddp_pendulum_cart_example import *
+from mpl_toolkits.mplot3d import Axes3D
 
 N_seconds = 10
 dt = 0.1
 # U = np.zeros(int(N_seconds/dt))
 params = {}
 # Perturbation_length = 0.1
-InitialAngle = np.arange(5,180,5)
-Perturbation_size = np.arange(0,1100,50)
+InitialAngle = np.arange(5,180,5)[:10]
+Perturbation_size = np.arange(0,1100,25)[:20]
 # U[:int(Perturbation_length/dt)] = Perturbation_size*np.ones((int(Perturbation_length/dt)))
-Time_Constant = np.arange(0.05,1.05,0.05)
+Time_Constant = np.arange(0.05,1.05,0.025)[:20]
 
 RunningCost = [
         "Minimize Input Energy",
@@ -53,11 +54,31 @@ for k in range(len(InitialAngle)):
                     TotalU[-1][int((N_seconds/dt)/2):],
                     dt
                 )
-            if successValue<1000:
+            if successValue<200:
                 print("Successful trial for Time Constant = " + str(Time_Constant[i]))
                 # animate_trajectory(Time,TotalX[-1],TotalU[-1])
-                params["Trial " + str(i+1)] = {
+                params["Trial " + "%02d"%(i+1) + "%02d"%(j+1) + "%02d"%(k+1)] = {
                         "Initial Angle" : InitialAngle[k],
                         "Time Constant" : Time_Constant[i],
-                        "Perturbation Amplitude" : Perturbation_size[j]
-                        }
+                        "Perturbation Amplitude" : Perturbation_size[j],
+                        "X" : TotalX[-1],
+                        "U" : TotalU[-1],
+                        "Success Value" : successValue}
+
+
+angles = []
+time_constants = []
+perturbation = []
+for key in params.keys():
+    angles.append(params[key]['Initial Angle'])
+    time_constants.append(params[key]['Time Constant'])
+    perturbation.append(params[key]['Perturbation Amplitude'])
+
+fig = plt.figure(figsize=(10,7))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(angles,time_constants,perturbation)
+ax.set_title(r"$u(t) = A_\delta \cdot e^{-t/\tau}$",fontsize=16)
+ax.set_xlabel(r"$\theta_o$ - Initial Angle (deg)")
+ax.set_ylabel(r"$\tau$ - Time Constant (s)")
+ax.set_zlabel(r"$A_\delta$ - Perturbation Amplitude (N)")
+plt.show()
