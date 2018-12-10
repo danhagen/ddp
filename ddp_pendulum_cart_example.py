@@ -79,19 +79,19 @@ def forward_integrate_dynamics(
     assert type(ICs)==list and len(ICs)==4, "ICs must be a list of length 2."
     LocationStrings = ["1st", "2nd", "3rd", "4th"]
     for i in range(4):
-        assert str(type(ICs[i])) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
-            "ICs must be numbers. Check the " + LocationString[i] + " element of IC"
+        assert str(type(ICs[i])) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>"],\
+            "ICs must be numbers. Check the " + LocationStrings[i] + " element of IC"
 
     assert type(UsingDegrees)==bool, "UsingDegrees must be either True or False."
 
     assert type(Animate)==bool, "Animate must be either True or False."
 
     dt = kwargs.get("dt",0.01)
-    assert str(type(dt)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(dt)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>"],\
         "dt must be a number."
 
     N_seconds = kwargs.get("N_seconds",10)
-    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>"],\
         "N_seconds must be a number."
 
     Time = np.arange(0,N_seconds+dt,dt)
@@ -438,13 +438,16 @@ def animate_trajectory(Time,X,U,**kwargs):
     SaveAsGif = kwargs.get("SaveAsGif",False)
     assert type(SaveAsGif)==bool, "SaveAsGif must be either True or False (Default)."
 
+    FileName = kwargs.get("FileName","ddp_simple_pendulum")
+    assert type(FileName)==str,"FileName must be a str."
+
         # Angles must be in degrees for animation
 
     X2d = X[1,:]*(180/np.pi)
     X4d = X[3,:]*(180/np.pi)
 
 
-    fig = plt.figure(figsize=(18,14))
+    fig = plt.figure(figsize=(12,10))
     ax0 = plt.subplot2grid((3,4),(0,0),colspan=2) # animation
     ax1 = plt.subplot2grid((3,4),(0,2),colspan=2) # input
     ax2 = plt.subplot2grid((3,4),(1,0),colspan=2) # pendulum angle
@@ -470,6 +473,11 @@ def animate_trajectory(Time,X,U,**kwargs):
             highest_marker,
             marker_interdistance
             )
+    smallmarkers = np.arange(
+            lowest_marker,
+            highest_marker,
+            marker_interdistance/2
+            )
     marker_str = []
     for marker in markers:
         if marker%100==0:
@@ -483,6 +491,14 @@ def animate_trajectory(Time,X,U,**kwargs):
                 marker="|",
                 c="k",
                 s=2000)
+
+    SmallMarkers = ax0.scatter(
+                smallmarkers-X[0,0],
+                -0.90*(Cart_Height/2
+                    + Wheel_Radius*2)*np.ones(len(smallmarkers)),
+                marker="|",
+                c="k",
+                s=1000)
 
     Cart = plt.Rectangle(
                 (X[0,0]-Cart_Width/2,-Cart_Height/2),
@@ -523,7 +539,7 @@ def animate_trajectory(Time,X,U,**kwargs):
                         Cart_Height/2 + Pendulum_Width/2 + Pendulum_Length*np.cos(X[1,0])
                     ],
                     Color='0.50',
-                    lw = 10,
+                    lw = 5,
                     solid_capstyle='round'
                     )
 
@@ -536,7 +552,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         [Cart_Height/2 + Pendulum_Width/2],
         c='k',
         marker='o',
-        lw=2
+        lw=1
         )
 
     MinimumX = X[0,0]-13
@@ -673,6 +689,14 @@ def animate_trajectory(Time,X,U,**kwargs):
                 axis=1)
         Markers.set_offsets(offset)
 
+        smalloffset = np.concatenate([
+                (smallmarkers-X[0,i])[:,np.newaxis],
+                (-0.90*(Cart_Height/2 + Wheel_Radius*2)
+                    * np.ones(len(smallmarkers)))[:,np.newaxis]
+                ],
+                axis=1)
+        SmallMarkers.set_offsets(smalloffset)
+
         Cart.xy = (X[0,0]-Cart_Width/2,-Cart_Height/2)
 
         FrontWheel.center = (X[0,0]+Cart_Width/4,-(Cart_Height/2 + Wheel_Radius))
@@ -704,7 +728,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         AngularVelocity.set_xdata(Time[:i])
         AngularVelocity.set_ydata(X4d[:i])
 
-        return Markers,Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Input,Position,Angle,Velocity,AngularVelocity,
+        return SmallMarkers,Markers,Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Input,Position,Angle,Velocity,AngularVelocity,
 
     # Init only required for blitting to give a clean slate.
     def init():
@@ -714,6 +738,13 @@ def animate_trajectory(Time,X,U,**kwargs):
                     marker="^",
                     c="k",
                     s=2000)
+
+        SmallMarkers = plt.scatter(
+                    smallmarkers-X[0,0],
+                    -0.90*(Cart_Height/2 + Wheel_Radius*2)*np.ones(len(smallmarkers)),
+                    marker="^",
+                    c="k",
+                    s=1000)
 
         Cart = plt.Rectangle(
                     (X[0,0]-Cart_Width/2,-Cart_Height/2),
@@ -766,7 +797,7 @@ def animate_trajectory(Time,X,U,**kwargs):
             [Cart_Height/2 + Pendulum_Width/2],
             c='k',
             marker='o',
-            lw=2
+            lw=1
             )
 
         Ground = plt.Rectangle(
@@ -797,6 +828,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         Velocity, = ax5.plot([0],[X[2,0]],color = 'g--')
 
         Markers.set_visible(False)
+        SmallMarkers.set_visible(False)
         Cart.set_visible(False)
         FrontWheel.set_visible(False)
         FrontWheel_Rivet.set_visible(False)
@@ -812,7 +844,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         Velocity.set_visible(False)
         AngularVelocity.set_visible(False)
 
-        return Markers,Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Ground,Input,Position,Angle,Velocity,
+        return SmallMarkers,Markers,Cart,FrontWheel,FrontWheel_Rivet,BackWheel,BackWheel_Rivet,Pendulum,Pendulum_Attachment,Pendulum_Rivet,Ground,Input,Position,Angle,Velocity,
 
     dt = Time[1]-Time[0]
     if dt <= 0.0001:
@@ -821,9 +853,11 @@ def animate_trajectory(Time,X,U,**kwargs):
         framestep=200
     elif dt <= 0.01:
         framestep=10
+    else:
+        framestep=1
     ani = animation.FuncAnimation(fig, animate, frames=np.arange(0,len(Time)-1,framestep),init_func=init, blit=False)
     if SaveAsGif==True:
-        ani.save('simple_pendulum_ddp_01.gif', writer='imagemagick', fps=10)
+        ani.save(FileName+'.gif', writer='imagemagick', fps=10)
     plt.show()
 
 def return_f32(X,U):
@@ -935,7 +969,6 @@ def return_f44(X,U):
         )
     )
 
-
 def return_Phi(X,U,dt):
     """
     Takes in the state vector, X, of shape (4,) and a number U, and outputs a matrix of shape (4,4)
@@ -945,7 +978,8 @@ def return_Phi(X,U,dt):
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
-            "<class 'numpy.float64'>"],\
+            "<class 'numpy.float64'>",
+            "<class 'numpy.int32'>"],\
         "U must be a number. Not " + str(type(U)) + "."
     result = (np.eye(4)
         + np.matrix(
@@ -972,7 +1006,8 @@ def return_B(X,U,dt):
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
-            "<class 'numpy.float64'>"],\
+            "<class 'numpy.float64'>",
+            "<class 'numpy.int32'>"],\
         "U must be a number. Not " + str(type(U)) + "."
     result = (
         np.matrix(
@@ -1056,9 +1091,26 @@ def return_l_func(RunningCost='Minimize Input Energy'):
         result1 = lambda X,U,dt: np.matrix([[0]])
 
     if "Minimize time away from target angle" in RunningCost:
-        result2 = lambda X,U,dt: np.matrix([[c2*(1/2)*(X[1]%(2*np.pi)-TargetAngle)**2]])
+        result2 = lambda X,U,dt: np.matrix([[c2*(1/2)*(X[1]-TargetAngle)**2]])
     else:
         result2 = lambda X,U,dt: np.matrix([[0]])
+    # if "Minimize time away from target angle" in RunningCost:
+    #     """
+    #     In order to approximate (k2/2)*(X[1]-TargetAngle)**2 that repeats every 2*np.pi we must have a time shifted fourier series expansion. c2*(np.pi**2)/6 + sum([((-1)**n) * (2*c2/(n**2)) * np.cos(n*(X[1]-TargetAngle)) for n in range(1,N)])
+    #     """
+    #     result2 = lambda X,U,dt: np.matrix([
+    #             [
+    #                 c2*(np.pi**2)/6
+    #                 + sum([
+    #                         ((-1)**n)
+    #                         *(2*c2/(n**2))
+    #                         *np.cos(n*(X[1]-TargetAngle))
+    #                     for n in range(1,100)
+    #                 ])
+    #             ]
+    #         ])
+    # else:
+    #     result2 = lambda X,U,dt: np.matrix([[0]])
 
     if "Minimize time away from target angular velocity" in RunningCost:
         result3 = lambda X,U,dt:\
@@ -1108,9 +1160,28 @@ def return_lx_func(RunningCost='Minimize Input Energy'):
         result1 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
 
     if "Minimize time away from target angle" in RunningCost:
-        result2 = lambda X,U,dt: np.matrix([[0],[c2*(X[1]%(2*np.pi)-TargetAngle)],[0],[0]])
+        result2 = lambda X,U,dt: np.matrix([[0],[c2*(X[1]-TargetAngle)],[0],[0]])
     else:
         result2 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
+    # if "Minimize time away from target angle" in RunningCost:
+    #     """
+    #     In order to approximate (k2/2)*(X[1]-TargetAngle)**2 that repeats every 2*np.pi we must have a time shifted fourier series expansion. c2*(np.pi**2)/6 + sum([((-1)**n) * (2*c2/(n**2)) * np.cos(n*(X[1]-TargetAngle)) for n in range(1,N)])
+    #     """
+    #     result2 = lambda X,U,dt: np.matrix([
+    #             [0],
+    #             [
+    #                 sum([
+    #                         ((-1)**(n+1))
+    #                         *(2*c2/n)
+    #                         *np.sin(n*(X[1]-TargetAngle))
+    #                     for n in range(1,100)
+    #                 ])
+    #             ],
+    #             [0],
+    #             [0]
+    #         ])
+    # else:
+    #     result2 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
 
     if "Minimize time away from target angular velocity" in RunningCost:
         result3 = lambda X,U,dt: np.matrix([[0],[0],[0],[c4*(X[3]-TargetAngularVelocity)]])
@@ -1368,6 +1439,33 @@ def return_lxx_func(RunningCost='Minimize Input Energy'):
                                     [0,0,0,0],
                                     [0,0,0,0],
                                     [0,0,0,0]])
+    # if "Minimize time away from target angle" in RunningCost:
+    #     """
+    #     In order to approximate (k2/2)*(X[1]-TargetAngle)**2 that repeats every 2*np.pi we must have a time shifted fourier series expansion. c2*(np.pi**2)/6 + sum([((-1)**n) * (2*c2/(n**2)) * np.cos(n*(X[1]-TargetAngle)) for n in range(1,N)])
+    #
+    #     NOTE: This does something funny when you use more than 100 frequencies. The limit of this function approaches 2*c2 not c2. If this creates undesireable features, then it might be best to change this value to c2 exclusively.
+    #     """
+    #     result2 = lambda X,U,dt: np.matrix(
+    #                                 [[0,0,0,0],
+    #                                 [
+    #                                     0,
+    #                                     sum([
+    #                                             ((-1)**(n+1))
+    #                                             *(2*c2)
+    #                                             *np.cos(n*(X[1]-TargetAngle))
+    #                                         for n in range(1,100)
+    #                                         ]),
+    #                                     0,
+    #                                     0
+    #                                 ],
+    #                                 [0,0,0,0],
+    #                                 [0,0,0,0]])
+    # else:
+    #     result2 = lambda X,U,dt: np.matrix(
+    #                                 [[0,0,0,0],
+    #                                 [0,0,0,0],
+    #                                 [0,0,0,0],
+    #                                 [0,0,0,0]])
 
     if "Minimize time away from target angular velocity" in RunningCost:
         result3 = lambda X,U,dt: np.matrix(
@@ -1526,7 +1624,22 @@ def return_running_cost_func(RunningCost='Minimize Input Energy'):
         result1 = lambda X,U,dt: 0
 
     if "Minimize time away from target angle" in RunningCost:
-        result2 = lambda X,U,dt: np.trapz(c2*(1/2)*(X[1,1:]%(2*np.pi)-TargetAngle)**2,dx=dt)
+        """
+        In order to approximate (k2/2)*(X[1]-TargetAngle)**2 that repeats every 2*np.pi we must have a time shifted fourier series expansion. c2*(np.pi**2)/6 + sum([((-1)**n) * (2*c2/(n**2)) * np.cos(n*(X[1]-TargetAngle)) for n in range(1,N)])
+
+        Note: we checked to make sure that the linearity holds for this trapz/sum combination and it does.
+        """
+        result2 = lambda X,U,dt: np.trapz(c2*(1/2)*(X[1,1:]-TargetAngle)**2,dx=dt)
+        # result2 = lambda X,U,dt: np.trapz(
+        #     c2*(np.pi**2)/6
+        #     + sum([
+        #             ((-1)**n)
+        #             *(2*c2/(n**2))
+        #             *np.cos(n*(X[1,1:]-TargetAngle))
+        #         for n in range(1,100)
+        #     ]),
+        #     dx=dt
+        # )
     else:
         result2 = lambda X,U,dt: 0
 
@@ -1568,14 +1681,55 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
                 "Each element of TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'. '" + el + "' not accepted."
 
     if "Minimize final angle from target angle" in TerminalCost:
-        result1 = lambda X,U,dt: k2*(1/2)*(X[1,-1]%(2*np.pi)-TargetAngle)**2
+        """
+        In order to approximate (k2/2)*(X[1]-TargetAngle)**2 that repeats every 2*np.pi we must have a time shifted fourier series expansion. c2*(np.pi**2)/6 + sum([((-1)**n) * (2*c2/(n**2)) * np.cos(n*(X[1]-TargetAngle)) for n in range(1,N)])
+        """
+        result1 = lambda X,U,dt: k2*(1/2)*(X[1,-1]-TargetAngle)**2
         result1_grad = lambda X,U,dt:\
-            np.matrix([[0],[k2*(X[1,-1]%(2*np.pi)-TargetAngle)],[0],[0]])
+            np.matrix([[0],[k2*(X[1,-1]-TargetAngle)],[0],[0]])
         result1_hess = lambda X,U,dt: np.matrix(
                                 [[0,0,0,0],
                                 [0,k2,0,0],
                                 [0,0,0,0],
                                 [0,0,0,0]])
+        # result1 = lambda X,U,dt: (
+        #             k2*(np.pi**2)/6
+        #             + sum([
+        #                     ((-1)**n)
+        #                     *(2*k2/(n**2))
+        #                     *np.cos(n*(X[1,-1]-TargetAngle))
+        #                 for n in range(1,100)
+        #             ])
+        #         )
+        # result1_grad = lambda X,U,dt:\
+        #     np.matrix([
+        #             [0],
+        #             [
+        #                 sum([
+        #                         ((-1)**(n+1))
+        #                         *(2*k2/n)
+        #                         *np.sin(n*(X[1,-1]-TargetAngle))
+        #                     for n in range(1,100)
+        #                 ])
+        #             ],
+        #             [0],
+        #             [0]
+        #         ])
+        # result1_hess = lambda X,U,dt: np.matrix(
+        #                             [[0,0,0,0],
+        #                             [
+        #                                 0,
+        #                                 sum([
+        #                                         ((-1)**(n+1))
+        #                                         *(2*c2)
+        #                                         *np.cos(n*(X[1,-1]-TargetAngle))
+        #                                     for n in range(1,100)
+        #                                     ]),
+        #                                 0,
+        #                                 0
+        #                             ],
+        #                             [0,0,0,0],
+        #                             [0,0,0,0]])
     else:
         result1 = lambda X,U,dt: 0
         result1_grad = lambda X,U,dt:\
@@ -1670,22 +1824,22 @@ def cart_pendulum_ddp(**kwargs):
         assert str(type(ICs[i])) in [
                 "<class 'numpy.float'>",
                 "<class 'int'>",
-                "<class 'float'>"],\
-            "ICs must be numbers. Check the " + LocationString[i] + " element of IC"
+                "<class 'float'>","<class 'numpy.int32'>"],\
+            "ICs must be numbers. Check the " + LocationStrings[i] + " element of IC"
 
     dt = kwargs.get("dt",0.01)
     assert str(type(dt)) in [
             "<class 'numpy.float'>",
             "<class 'int'>",
-            "<class 'float'>"],\
+            "<class 'float'>","<class 'numpy.int32'>"],\
         "dt must be a number."
 
     N_seconds = kwargs.get("N_seconds",10)
-    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>"],\
         "N_seconds must be a number."
 
     N_iterations = kwargs.get("N_iterations",10)
-    assert str(type(N_iterations)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(N_iterations)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>"],\
         "N_iterations must be a number."
 
     Animate = kwargs.get("Animate",True)
@@ -1695,7 +1849,7 @@ def cart_pendulum_ddp(**kwargs):
     assert type(PlotCost)==bool, "PlotCost must be either True (Default) or False."
 
     thresh = kwargs.get("thresh",1e-2)
-    assert str(type(thresh)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>"],\
+    assert str(type(thresh)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>"],\
         "thresh must be a number."
 
 
@@ -1829,8 +1983,8 @@ m1 = 10 # kg
 m2 = 1 # kg
 L = 0.5 # m
 g = 9.8 # m/s²
-b1 = 1 # kg/s - Damping coefficient for cart position
-b2 = 10 # Nms - Damping coefficient for pendulum angle
+b1 = 10 # kg/s - Damping coefficient for cart position
+b2 = 1 # Nms - Damping coefficient for pendulum angle
 
 d1 = 1 # weight of "Minimize Input Energy" in RunningCost'
 
@@ -1840,9 +1994,9 @@ c3 = 0 # UNASSIGNED weight of "Minimize time away from target cart velocity" in 
 c4 = 100 # weight of "Minimize time away from target angular velocity" in RunningCost
 
 k1 = 0 # UNASSIGNED weight of "Minimize final position from target position" in TerminalCost
-k2 = 10 # weight of 'Minimize final angle from target angle' in TerminalCost
+k2 = 100 # weight of 'Minimize final angle from target angle' in TerminalCost
 k3 = 0 # UNASSIGNED weight of "Minimize final velocity from target velocity" in TerminalCost
-k4 = 10 # weight of  'Minimize final angular velocity from target angular velocity' in TerminalCost
+k4 = 100 # weight of  'Minimize final angular velocity from target angular velocity' in TerminalCost
 
 TargetAngle = 0 #in radians
 TargetAngularVelocity = 0 #in radians

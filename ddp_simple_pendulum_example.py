@@ -116,13 +116,18 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     SaveAsGif = kwargs.get("SaveAsGif",False)
     assert type(SaveAsGif)==bool, "SaveAsGif must be either True or False (Default)."
+
+    FileName = kwargs.get("FileName","ddp_simple_pendulum")
+    if FileName is not None:
+        assert type(FileName)==str,"FileName must be a str."
+    
         # Angles must be in degrees for animation
 
     X1d = X[0,:]*(180/np.pi)
     X2d = X[1,:]*(180/np.pi)
 
 
-    fig = plt.figure(figsize=(15,12))
+    fig = plt.figure(figsize=(12,10))
     ax1 = plt.subplot2grid((2,6),(0,0),colspan=6) # animation
     ax2 = plt.subplot2grid((2,6),(1,0),colspan=2) # pendulum angle
     ax3 = plt.subplot2grid((2,6),(1,2),colspan=2) # pendulum angular velocity
@@ -201,7 +206,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         ax2.set_ylim([min(X1d)-0.15*RangeX1d,max(X1d)+0.15*RangeX1d])
     ax2.spines['right'].set_visible(False)
     ax2.spines['top'].set_visible(False)
-    ax2.set_title("Pendulum Angle (deg)",fontsize=16,fontweight = 4,color = 'r',y = 1.05)
+    ax2.set_title("Pendulum Angle (deg)",fontsize=12,fontweight = 4,color = 'r',y = 1.05)
 
     # Angular Velocity
 
@@ -216,7 +221,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         ax3.set_ylim([min(X2d)-0.1*RangeX2d,max(X2d)+0.1*RangeX2d])
     ax3.spines['right'].set_visible(False)
     ax3.spines['top'].set_visible(False)
-    ax3.set_title("Pendulum Angular Velocity (deg/s)",fontsize=16,fontweight = 4,color = 'r',y = 1.05)
+    ax3.set_title("Pendulum Angular Velocity (deg/s)",fontsize=12,fontweight = 4,color = 'r',y = 1.05)
 
     # Input Torque
 
@@ -231,7 +236,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         ax4.set_ylim([min(U)-0.1*RangeU,max(U)+0.1*RangeU])
     ax4.spines['right'].set_visible(False)
     ax4.spines['top'].set_visible(False)
-    ax4.set_title("Applied Torque (Nm)",fontsize=16,fontweight = 4,color = 'g',y = 1.05)
+    ax4.set_title("Applied Torque (Nm)",fontsize=12,fontweight = 4,color = 'g',y = 1.05)
 
     def animate(i):
 
@@ -301,7 +306,7 @@ def animate_trajectory(Time,X,U,**kwargs):
     dt = Time[1]-Time[0]
     ani = animation.FuncAnimation(fig, animate, frames=np.arange(0,len(Time)-1,10), init_func=init, blit=False)
     if SaveAsGif==True:
-        ani.save('simple_pendulum_ddp.gif', writer='imagemagick', fps=10)
+        ani.save(FileName+'.gif', writer='imagemagick', fps=10)
     plt.show()
 
 def return_Phi(X,U,dt):
