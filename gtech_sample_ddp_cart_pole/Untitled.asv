@@ -1,0 +1,10 @@
+clear
+clc
+
+syms x1 x2 x3 x4 dx1 dx2 dx3 dx4
+h = .001;
+dx1 = (Function3(x1,x2,x3,x4)-Function1(x1-h,x2,x3,x4))/h;
+dx1 = (Function4(x1,x2,x3,x4)-Function1(x1-h,x2,x3,x4))/h;
+
+
+subs(dx1,x1,2)
