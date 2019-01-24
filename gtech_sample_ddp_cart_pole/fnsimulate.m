@@ -9,7 +9,7 @@ global gr;
 x = xo;
 
 for k = 1:(Horizon-1)
-    
+
 
       Fx(1,1) = x(3,k);
       Fx(2,1) = x(4,k);
@@ -18,5 +18,5 @@ for k = 1:(Horizon-1)
       Fx(3,1) = Function3(x(1,k),x(2,k),x(3,k),x(4,k),u_new(k));
       Fx(4,1) = Function4(x(1,k),x(2,k),x(3,k),x(4,k),u_new(k));
 
-x(:,k+1) = x(:,k) + Fx * dt; 
+x(:,k+1) = x(:,k) + Fx * dt;
 end

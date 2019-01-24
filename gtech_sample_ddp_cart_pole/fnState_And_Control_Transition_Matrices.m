@@ -2,7 +2,7 @@ function [A,B] = fnState_And_Control_Transition_Matrices(x,u,du,dt)
 
 
 x1 = x(1,1);
-x2 = x(2,1);  
+x2 = x(2,1);
 x3 = x(3,1);
 x4 = x(4,1);
 
@@ -39,7 +39,3 @@ B(1,1) = 0;
 B(2,1) = 0;
 B(3,1) = (Function3(x1,x2,x3,x4,u)-Function3(x1,x2,x3,x4,u-h))/h;
 B(4,1) = (Function4(x1,x2,x3,x4,u)-Function4(x1,x2,x3,x4,u-h))/h;
-
-
-
-

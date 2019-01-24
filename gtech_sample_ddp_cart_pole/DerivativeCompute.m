@@ -34,8 +34,3 @@ B(1,1) = 0;
 B(2,1) = 0;
 B(3,1) = (Function3(x1,x2,x3,x4,F)-Function3(x1,x2,x3,x4,F-h))/h;
 B(4,1) = (Function4(x1,x2,x3,x4,F)-Function4(x1,x2,x3,x4,F-h))/h;
-
-
-
-
-
