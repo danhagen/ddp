@@ -1,0 +1,3 @@
+[2019_01_24] -
+    -  I have successfully swapped out the dynamics equations for the ones that I derived for the cart pendulum (from Lagrangian dynamics). The system still converges to an optimal solution even when large amounts of damping are added.
+    -  I changed all of the "empty" zero arrays, that were predefined before the function began, and turned them into empty lists of a predefined length. In this way, I was able to define values in the proper matrix dimensions so that they were ready to be multiplied to create the control variables. This had no effect on the quality of the solution, but did decrease the run time from ~20s to ~15s (75%).

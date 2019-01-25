@@ -29,10 +29,10 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     plt.suptitle("Cart-Pendulum Example",Fontsize=28,y=0.95)
 
-    Pendulum_Width = 0.01*l
-    Pendulum_Length = 2*l
-    Cart_Width = 4*l
-    Cart_Height = 2*l
+    Pendulum_Width = 0.01*L
+    Pendulum_Length = 2*L
+    Cart_Width = 4*L
+    Cart_Height = 2*L
     Wheel_Radius = 0.125*Cart_Width
     # Model Drawing
     marker_interdistance = 25

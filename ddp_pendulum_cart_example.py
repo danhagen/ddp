@@ -26,7 +26,7 @@ def dx3_dt(X,U):
         (
             m2*L*np.sin(X[1])*(X[3]**2)
             - b1*X[2]
-            - m2*g*np.sin(2*X[1])/2
+            - m2*gr*np.sin(2*X[1])/2
             + b2*np.cos(X[1])*X[3]/L
             + U
         )
@@ -38,7 +38,7 @@ def dx4_dt(X,U):
         (
             -m2*np.sin(2*X[1])*(X[3]**2)/2
             + b1*np.cos(X[1])*X[2]/L
-            + (m1+m2)*g*np.sin(X[1])/L
+            + (m1+m2)*gr*np.sin(X[1])/L
             - (m1+m2)*b2*X[3]/(m2*(L**2))
             - np.cos(X[1])*U/L
         )
@@ -130,7 +130,7 @@ def forward_integrate_dynamics(
             plt.figure(figsize=(15,10))
 
             ax1 = plt.subplot(323)
-            ax1.plot(Time,180*X[1,:]/np.pi,'g')
+            ax1.plot(Time,180*X[1,:]/np.pi,'gr')
             ax1.set_xlabel('Time (s)')
             ax1.set_ylabel('Pendulum Angle (deg)')
             if max(abs(180*X[1,:]/np.pi - 180*X[1,0]/np.pi))<1e-7:
@@ -144,7 +144,7 @@ def forward_integrate_dynamics(
                 ax2.set_ylim([X[0,0] - 5,X[0,0] + 5])
 
             ax3 = plt.subplot(325)
-            ax3.plot(Time,180*X[3,:]/np.pi,'g--')
+            ax3.plot(Time,180*X[3,:]/np.pi,'gr--')
             ax3.set_xlabel('Time (s)')
             ax3.set_ylabel('Pendulum Angular \n Velocity (deg/s)')
             if max(abs(180*X[3,:]/np.pi-180*X[3,0]/np.pi))<1e-7:
@@ -240,7 +240,7 @@ def forward_integrate_dynamics(
                             + Pendulum_Length*np.cos(
                                 np.linspace(0.05*(30*np.pi/180),0.95*(30*np.pi/180),20)
                                 ),
-                            Color='g',
+                            Color='gr',
                             lw = 2,
                             solid_capstyle = 'round'
                             )
@@ -260,7 +260,7 @@ def forward_integrate_dynamics(
                                 0,
                                 k*np.sin(0.95*(30*np.pi/180) - (30*np.pi/180))
                             ],
-                            Color='g',
+                            Color='gr',
                             lw = 2,
                             solid_capstyle='round'
                             )
@@ -620,7 +620,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     #Cart Position
 
-    Position, = ax3.plot([0],[X[0,0]],color = 'g')
+    Position, = ax3.plot([0],[X[0,0]],color = 'gr')
     ax3.set_xlim(0,Time[-1])
     ax3.set_xticks(list(np.linspace(0,Time[-1],5)))
     ax3.set_xticklabels([str(0),'','','',str(Time[-1])])
@@ -632,7 +632,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     ax3.spines['right'].set_visible(False)
     ax3.spines['top'].set_visible(False)
-    ax3.set_title("Cart Position (m)",fontsize=16,fontweight = 4,color = 'g',y = 0.95)
+    ax3.set_title("Cart Position (m)",fontsize=16,fontweight = 4,color = 'gr',y = 0.95)
 
     # Angular Velocity
 
@@ -651,7 +651,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     # Cart Velocity
 
-    Velocity, = ax5.plot([0],[X[2,0]],color='g',linestyle="--")
+    Velocity, = ax5.plot([0],[X[2,0]],color='gr',linestyle="--")
     ax5.set_xlim(0,Time[-1])
     ax5.set_xticks(list(np.linspace(0,Time[-1],5)))
     ax5.set_xticklabels([str(0),'','','',str(Time[-1])])
@@ -662,7 +662,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         ax5.set_ylim([min(X[2,:])-0.1*RangeX3,max(X[2,:])+0.1*RangeX3])
     ax5.spines['right'].set_visible(False)
     ax5.spines['top'].set_visible(False)
-    ax5.set_title("Cart Velocity (m/s)",fontsize=16,fontweight = 4,color = 'g',y = 0.95)
+    ax5.set_title("Cart Velocity (m/s)",fontsize=16,fontweight = 4,color = 'gr',y = 0.95)
 
     def animate(i):
         # Cart.xy = (X[1,i]-Cart_Width/2,-Cart_Height/2)
@@ -817,7 +817,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
         #Cart Position
 
-        Position, = ax3.plot([0],[X[0,0]],color = 'g')
+        Position, = ax3.plot([0],[X[0,0]],color = 'gr')
 
         # Angular Velocity
 
@@ -825,7 +825,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
         # Cart Velocity
 
-        Velocity, = ax5.plot([0],[X[2,0]],color = 'g--')
+        Velocity, = ax5.plot([0],[X[2,0]],color = 'gr--')
 
         Markers.set_visible(False)
         SmallMarkers.set_visible(False)
@@ -865,7 +865,7 @@ def return_f32(X,U):
         (
             (
                 m2*L*np.cos(X[1])*(X[3]**2)
-                - m2*g*np.cos(2*X[1])
+                - m2*gr*np.cos(2*X[1])
                 - b2*np.sin(X[1])*X[3]/L
             )
             *
@@ -875,7 +875,7 @@ def return_f32(X,U):
             -
             (
                 m2*L*np.sin(X[1])*(X[3]**2)
-                - m2*g*np.sin(2*X[1])/2
+                - m2*gr*np.sin(2*X[1])/2
                 - b1*X[2]
                 + U
                 + b2*np.cos(X[1])*X[3]/L
@@ -919,7 +919,7 @@ def return_f42(X,U):
         (
             (
                 -m2*np.cos(2*X[1])*(X[3]**2)
-                + (m1+m2)*g*np.cos(X[1])/L
+                + (m1+m2)*gr*np.cos(X[1])/L
                 - b1*np.sin(X[1])*X[2]/L
                 + np.sin(X[1])*U/L
             )
@@ -930,7 +930,7 @@ def return_f42(X,U):
             -
             (
                 -m2*np.sin(2*X[1])*(X[3]**2)/2
-                + (m1+m2)*g*np.sin(X[1])/L
+                + (m1+m2)*gr*np.sin(X[1])/L
                 + b1*np.cos(X[1])*X[2]/L
                 - (m1+m2)*b2*X[3]/(m2*(L**2))
                 - np.cos(X[1])*U/L
@@ -1088,7 +1088,7 @@ def return_l_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.matrix([[(d1/2)*U**2]])
+        result1 = lambda X,U,dt: np.matrix([[(R/2)*U**2]])
     else:
         result1 = lambda X,U,dt: np.matrix([[0]])
 
@@ -1225,7 +1225,7 @@ def return_lu_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.matrix([[d1*U]])
+        result1 = lambda X,U,dt: np.matrix([[R*U]])
     else:
         result1 = lambda X,U,dt: np.matrix([[0]])
 
@@ -1370,7 +1370,7 @@ def return_luu_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.matrix([[d1]])
+        result1 = lambda X,U,dt: np.matrix([[R]])
     else:
         result1 = lambda X,U,dt: np.matrix([[0]])
 
@@ -1621,7 +1621,7 @@ def return_running_cost_func(RunningCost='Minimize Input Energy'):
                 "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
-        result1 = lambda X,U,dt: np.trapz((d1/2)*U**2,dx=dt)
+        result1 = lambda X,U,dt: np.trapz((R/2)*U**2,dx=dt)
     else:
         result1 = lambda X,U,dt: 0
 
@@ -1990,11 +1990,11 @@ def cart_pendulum_ddp(**kwargs):
 m1 = 10 # kg
 m2 = 1 # kg
 L = 0.5 # m
-g = 9.8 # m/s²
+gr = 9.8 # m/s²
 b1 = 10 # kg/s - Damping coefficient for cart position
 b2 = 1 # Nms - Damping coefficient for pendulum angle
 
-d1 = 1 # weight of "Minimize Input Energy" in RunningCost'
+R = 1 # weight of "Minimize Input Energy" in RunningCost'
 
 c1 = 1 # weight of "Minimize time away from initial position" in RunningCost
 c2 = 100 # weight of "Minimize time away from target angle" in RunningCost

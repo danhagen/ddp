@@ -1,21 +1,27 @@
 import numpy as np
 
-def fnCost(x,u,k,R,dt):
+def return_cost_for_a_given_trial(X,U,p_target,dt,Q_f,R):
     """
-    Takes in the state vector (x) and the input scalar (u) and the running cost scalar R (as well as some unused vars - k and dt) and outputs the derivatives of the running cost.
+    This takes in the state variables over time (X) and the input (U), as well as the target state (p_target), the time step (dt), and the cost matrices (Q_f and R), and output the cost of the trial.
 
     #######################
     ##### NEED TO DO: #####
     #######################
 
-    [ ] - Create tests that ensure that x, u, and R are the correct dimensions.
-    [ ] - Create tests to make sure that the output are of the correct sizes.
-    """
-    l0 = u.T * R * u
-    l_x = np.zeros((4,1))
-    l_xx = np.zeros((4,4))
-    l_u = R * u
-    l_uu = R
-    l_ux = np.zeros((1,4))
+    [ ] - Create a test to ensure that everything has the right shape.
 
-    return(l0,l_x,l_xx,l_u,l_uu,l_ux)
+    """
+    Horizon = np.shape(X)[1]
+
+    RunningCost = 0
+    for j in range(Horizon-1):
+        RunningCost = RunningCost + 0.5 * U[j].T * R * U[j] * dt
+
+    TerminalCost = (
+        (np.matrix(X[:,Horizon-1]).T - p_target).T
+        * Q_f
+        * (np.matrix(X[:,Horizon-1]).T - p_target)
+    )[0,0]
+
+    Cost = RunningCost + TerminalCost
+    return(Cost)
