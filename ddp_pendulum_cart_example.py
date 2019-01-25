@@ -130,7 +130,7 @@ def forward_integrate_dynamics(
             plt.figure(figsize=(15,10))
 
             ax1 = plt.subplot(323)
-            ax1.plot(Time,180*X[1,:]/np.pi,'gr')
+            ax1.plot(Time,180*X[1,:]/np.pi,'g')
             ax1.set_xlabel('Time (s)')
             ax1.set_ylabel('Pendulum Angle (deg)')
             if max(abs(180*X[1,:]/np.pi - 180*X[1,0]/np.pi))<1e-7:
@@ -144,7 +144,7 @@ def forward_integrate_dynamics(
                 ax2.set_ylim([X[0,0] - 5,X[0,0] + 5])
 
             ax3 = plt.subplot(325)
-            ax3.plot(Time,180*X[3,:]/np.pi,'gr--')
+            ax3.plot(Time,180*X[3,:]/np.pi,'g--')
             ax3.set_xlabel('Time (s)')
             ax3.set_ylabel('Pendulum Angular \n Velocity (deg/s)')
             if max(abs(180*X[3,:]/np.pi-180*X[3,0]/np.pi))<1e-7:
@@ -240,7 +240,7 @@ def forward_integrate_dynamics(
                             + Pendulum_Length*np.cos(
                                 np.linspace(0.05*(30*np.pi/180),0.95*(30*np.pi/180),20)
                                 ),
-                            Color='gr',
+                            Color='g',
                             lw = 2,
                             solid_capstyle = 'round'
                             )
@@ -260,7 +260,7 @@ def forward_integrate_dynamics(
                                 0,
                                 k*np.sin(0.95*(30*np.pi/180) - (30*np.pi/180))
                             ],
-                            Color='gr',
+                            Color='g',
                             lw = 2,
                             solid_capstyle='round'
                             )
@@ -620,7 +620,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     #Cart Position
 
-    Position, = ax3.plot([0],[X[0,0]],color = 'gr')
+    Position, = ax3.plot([0],[X[0,0]],color = 'g')
     ax3.set_xlim(0,Time[-1])
     ax3.set_xticks(list(np.linspace(0,Time[-1],5)))
     ax3.set_xticklabels([str(0),'','','',str(Time[-1])])
@@ -632,7 +632,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     ax3.spines['right'].set_visible(False)
     ax3.spines['top'].set_visible(False)
-    ax3.set_title("Cart Position (m)",fontsize=16,fontweight = 4,color = 'gr',y = 0.95)
+    ax3.set_title("Cart Position (m)",fontsize=16,fontweight = 4,color = 'g',y = 0.95)
 
     # Angular Velocity
 
@@ -651,7 +651,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
     # Cart Velocity
 
-    Velocity, = ax5.plot([0],[X[2,0]],color='gr',linestyle="--")
+    Velocity, = ax5.plot([0],[X[2,0]],color='g',linestyle="--")
     ax5.set_xlim(0,Time[-1])
     ax5.set_xticks(list(np.linspace(0,Time[-1],5)))
     ax5.set_xticklabels([str(0),'','','',str(Time[-1])])
@@ -662,7 +662,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         ax5.set_ylim([min(X[2,:])-0.1*RangeX3,max(X[2,:])+0.1*RangeX3])
     ax5.spines['right'].set_visible(False)
     ax5.spines['top'].set_visible(False)
-    ax5.set_title("Cart Velocity (m/s)",fontsize=16,fontweight = 4,color = 'gr',y = 0.95)
+    ax5.set_title("Cart Velocity (m/s)",fontsize=16,fontweight = 4,color = 'g',y = 0.95)
 
     def animate(i):
         # Cart.xy = (X[1,i]-Cart_Width/2,-Cart_Height/2)
@@ -817,7 +817,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
         #Cart Position
 
-        Position, = ax3.plot([0],[X[0,0]],color = 'gr')
+        Position, = ax3.plot([0],[X[0,0]],color = 'g')
 
         # Angular Velocity
 
@@ -825,7 +825,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
         # Cart Velocity
 
-        Velocity, = ax5.plot([0],[X[2,0]],color = 'gr--')
+        Velocity, = ax5.plot([0],[X[2,0]],color = 'g--')
 
         Markers.set_visible(False)
         SmallMarkers.set_visible(False)
@@ -860,121 +860,226 @@ def animate_trajectory(Time,X,U,**kwargs):
         ani.save("visualizations_cart_pendulum/"+FileName+'.gif', writer='imagemagick', fps=10)
     plt.show()
 
-def return_f32(X,U):
-    return(
-        (
-            (
-                m2*L*np.cos(X[1])*(X[3]**2)
-                - m2*gr*np.cos(2*X[1])
-                - b2*np.sin(X[1])*X[3]/L
-            )
-            *
-            (
-                m1 + m2*(np.sin(X[1])**2)
-            )
-            -
-            (
-                m2*L*np.sin(X[1])*(X[3]**2)
-                - m2*gr*np.sin(2*X[1])/2
-                - b1*X[2]
-                + U
-                + b2*np.cos(X[1])*X[3]/L
-            )
-            *
-            (
-                m2*np.sin(2*X[1])
-            )
-        )
-        /
-        (
-            (
-                m1 + m2*(np.sin(X[1])**2)
-            )**2
-        )
-    )
-def return_f33(X,U):
-    return(
-        (
-            -b1
-        )
-        /
-        (
-            m1 + m2*(np.sin(X[1])**2)
-        )
-    )
-def return_f34(X,U):
-    return(
-        (
-            2*m2*L*np.sin(X[1])*X[3]
-            + b2*np.cos(X[1])/L
-        )
-        /
-        (
-            m1 + m2*(np.sin(X[1])**2)
-        )
-    )
-
-def return_f42(X,U):
-    return(
-        (
-            (
-                -m2*np.cos(2*X[1])*(X[3]**2)
-                + (m1+m2)*gr*np.cos(X[1])/L
-                - b1*np.sin(X[1])*X[2]/L
-                + np.sin(X[1])*U/L
-            )
-            *
-            (
-                m1 + m2*(np.sin(X[1])**2)
-            )
-            -
-            (
-                -m2*np.sin(2*X[1])*(X[3]**2)/2
-                + (m1+m2)*gr*np.sin(X[1])/L
-                + b1*np.cos(X[1])*X[2]/L
-                - (m1+m2)*b2*X[3]/(m2*(L**2))
-                - np.cos(X[1])*U/L
-            )
-            *
-            (
-                m2*np.sin(2*X[1])
-            )
-        )
-        /
-        (
-            (
-                m1 + m2*(np.sin(X[1])**2)
-            )**2
-        )
-    )
-def return_f43(X,U):
-    return(
-        (
-            b1*np.cos(X[1])/L
-        )
-        /
-        (
-            m1 + m2*(np.sin(X[1])**2)
-        )
-    )
-def return_f44(X,U):
-    return(
-        (
-            -m2*np.sin(2*X[1])*X[3]
-            - (m1+m2)*b2/(m2*(L**2))
-        )
-        /
-        (
-            m1 + m2*(np.sin(X[1])**2)
-        )
-    )
-
+# def return_f32(X,U):
+#     return(
+#         (
+#             (
+#                 m2*L*np.cos(X[1])*(X[3]**2)
+#                 - m2*gr*np.cos(2*X[1])
+#                 - b2*np.sin(X[1])*X[3]/L
+#             )
+#             *
+#             (
+#                 m1 + m2*(np.sin(X[1])**2)
+#             )
+#             -
+#             (
+#                 m2*L*np.sin(X[1])*(X[3]**2)
+#                 - m2*gr*np.sin(2*X[1])/2
+#                 - b1*X[2]
+#                 + U
+#                 + b2*np.cos(X[1])*X[3]/L
+#             )
+#             *
+#             (
+#                 m2*np.sin(2*X[1])
+#             )
+#         )
+#         /
+#         (
+#             (
+#                 m1 + m2*(np.sin(X[1])**2)
+#             )**2
+#         )
+#     )
+# def return_f33(X,U):
+#     return(
+#         (
+#             -b1
+#         )
+#         /
+#         (
+#             m1 + m2*(np.sin(X[1])**2)
+#         )
+#     )
+# def return_f34(X,U):
+#     return(
+#         (
+#             2*m2*L*np.sin(X[1])*X[3]
+#             + b2*np.cos(X[1])/L
+#         )
+#         /
+#         (
+#             m1 + m2*(np.sin(X[1])**2)
+#         )
+#     )
+#
+# def return_f42(X,U):
+#     return(
+#         (
+#             (
+#                 -m2*np.cos(2*X[1])*(X[3]**2)
+#                 + (m1+m2)*gr*np.cos(X[1])/L
+#                 - b1*np.sin(X[1])*X[2]/L
+#                 + np.sin(X[1])*U/L
+#             )
+#             *
+#             (
+#                 m1 + m2*(np.sin(X[1])**2)
+#             )
+#             -
+#             (
+#                 -m2*np.sin(2*X[1])*(X[3]**2)/2
+#                 + (m1+m2)*gr*np.sin(X[1])/L
+#                 + b1*np.cos(X[1])*X[2]/L
+#                 - (m1+m2)*b2*X[3]/(m2*(L**2))
+#                 - np.cos(X[1])*U/L
+#             )
+#             *
+#             (
+#                 m2*np.sin(2*X[1])
+#             )
+#         )
+#         /
+#         (
+#             (
+#                 m1 + m2*(np.sin(X[1])**2)
+#             )**2
+#         )
+#     )
+# def return_f43(X,U):
+#     return(
+#         (
+#             b1*np.cos(X[1])/L
+#         )
+#         /
+#         (
+#             m1 + m2*(np.sin(X[1])**2)
+#         )
+#     )
+# def return_f44(X,U):
+#     return(
+#         (
+#             -m2*np.sin(2*X[1])*X[3]
+#             - (m1+m2)*b2/(m2*(L**2))
+#         )
+#         /
+#         (
+#             m1 + m2*(np.sin(X[1])**2)
+#         )
+#     )
+#
+# def return_Phi(X,U,dt):
+#     """
+#     Takes in the state vector, X, of shape (4,) and a number U, and outputs a matrix of shape (4,4)
+#     """
+#     assert np.shape(X)==(4,) and str(type(X))=="<class 'numpy.ndarray'>", \
+#         "X must be an numpy array of shape (4,)"
+#     assert str(type(U)) in ["<class 'int'>",
+#             "<class 'float'>",
+#             "<class 'numpy.float'>",
+#             "<class 'numpy.float64'>",
+#             "<class 'numpy.int32'>",
+#             "<class 'numpy.int64'>"],\
+#         "U must be a number. Not " + str(type(U)) + "."
+#     result = (np.eye(4)
+#         + np.matrix(
+#             [
+#             [0, 0, dt, 0],
+#             [0, 0, 0, dt],
+#             [0, return_f32(X,U)*dt, return_f33(X,U)*dt, return_f34(X,U)*dt],
+#             [0, return_f42(X,U)*dt, return_f43(X,U)*dt, return_f44(X,U)*dt]
+#             ]
+#         )
+#     )
+#
+#     assert np.shape(result)==(4,4) \
+#             and str(type(result))=="<class 'numpy.matrixlib.defmatrix.matrix'>", \
+#         "result must be a (4,4) numpy matrix. Not " + str(type(result)) + " of shape " + str(np.shape(result)) + "."
+#
+#     return(result)
+# def return_B(X,U,dt):
+#     """
+#     Takes in the state vector, X, of shape (4,) and a number U, and outputs a matrix of shape (4,1)
+#     """
+#     assert np.shape(X)==(4,) and str(type(X))=="<class 'numpy.ndarray'>", \
+#         "X must be an numpy array of shape (4,)"
+#     assert str(type(U)) in ["<class 'int'>",
+#             "<class 'float'>",
+#             "<class 'numpy.float'>",
+#             "<class 'numpy.float64'>",
+#             "<class 'numpy.int32'>",
+#             "<class 'numpy.int64'>"],\
+#         "U must be a number. Not " + str(type(U)) + "."
+#     result = (
+#         np.matrix(
+#             [
+#             [0],
+#             [0],
+#             [(dt)/(m1 + m2*(np.sin(X[1])**2))],
+#             [(-np.cos(X[1])*dt/L)/(m1 + m2*(np.sin(X[1])**2))]
+#             ]
+#         )
+#     )
+#
+#     assert np.shape(result)==(4,1) \
+#             and str(type(result))=="<class 'numpy.matrixlib.defmatrix.matrix'>", \
+#         "result must be a (4,1) numpy matrix. Not " + str(type(result)) + " of shape " + str(np.shape(result)) + "."
+#
+#     return(result)
+# def return_linearized_dynamics_matrices(X,U,dt):
+#     """
+#     Takes in the input U and the the corresponding output X, as well as dt and returns two lists that contain the linearized dynamic matrices for each timestep for range(len(Time)-1).
+#
+#     Note that if np.shape(X)[1] = N and len(U) = M, then N = M + 1 (i.e., there is one more timestep for output than input since the initial conditions are assigned to the first state space timestep). Therefore, we only concern ourselves with the linearized dynamics of the (N-1) steps where U drives X to the next timestep (i.e., X will only go up to the N-1 step or index X[:,:-1].)
+#
+#     Phi is a list of length len(Time)-1, each element with shape (n,n), where n is the number of states.
+#
+#     B is a list of length len(Time)-1, each element with shape (n,m), where n is the number of states and m is the number of inputs.
+#
+#     ### NEEDS TO BE TESTED ###
+#
+#     np.shape(X)[1] == len(U)+1
+#
+#     len(Phi) == len(U)
+#     type(Phi) == list
+#     len(B) == len(U)
+#     type(B) == list
+#
+#     ##########################
+#     """
+#     Phi = list(
+#             map(
+#                 lambda X,U: return_Phi(X,U,dt),
+#                 X[:,:-1].T,
+#                 U
+#             )
+#         )
+#
+#     B = list(
+#             map(
+#                 lambda X,U: return_B(X,U,dt),
+#                 X[:,:-1].T,
+#                 U
+#             )
+#         )
+#     return(Phi,B)
+h = 0.000001
 def return_Phi(X,U,dt):
     """
-    Takes in the state vector, X, of shape (4,) and a number U, and outputs a matrix of shape (4,4)
+    Takes in the state vector (X), the input vector (U) and returns the discretized and linearized state matrix, Phi.
+
+    NOTE: Although you can spend the time to calculate the explicit definitions of the derivatives of the state equations. This is unnecessary for real time control (especially when the state equations may not be perfect to begin with!). Instead, we can approximate the derivative by the difference quotient. For explicit functions, please see functions below (unused).
+
+    #######################
+    ##### NEED TO DO: #####
+    #######################
+
+    [ ] - Create tests that ensure that X and U are the correct dimensions.
+    [ ] - Create tests to make sure that the outputs are of the correct sizes.
     """
-    assert np.shape(X)==(4,) and str(type(X))=="<class 'numpy.ndarray'>", \
-        "X must be an numpy array of shape (4,)"
+    assert (str(type(X)) in ["<class 'numpy.ndarray'>"]
+            and np.shape(X)==(4,)), "Error with the type and shape of X ["+ fnState_And_Control_Transition_Matrices.__name__+"()]."
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
@@ -982,28 +1087,60 @@ def return_Phi(X,U,dt):
             "<class 'numpy.int32'>",
             "<class 'numpy.int64'>"],\
         "U must be a number. Not " + str(type(U)) + "."
-    result = (np.eye(4)
-        + np.matrix(
-            [
-            [0, 0, dt, 0],
-            [0, 0, 0, dt],
-            [0, return_f32(X,U)*dt, return_f33(X,U)*dt, return_f34(X,U)*dt],
-            [0, return_f42(X,U)*dt, return_f43(X,U)*dt, return_f44(X,U)*dt]
-            ]
-        )
-    )
 
-    assert np.shape(result)==(4,4) \
-            and str(type(result))=="<class 'numpy.matrixlib.defmatrix.matrix'>", \
-        "result must be a (4,4) numpy matrix. Not " + str(type(result)) + " of shape " + str(np.shape(result)) + "."
+    # Removed the U split into two scalars because U is already a scalar.
 
-    return(result)
+    h1 = np.array([h,0,0,0])
+    h2 = np.array([0,h,0,0])
+    h3 = np.array([0,0,h,0])
+    h4 = np.array([0,0,0,h])
+
+    # Build the dFx matrix
+
+    dFx = np.zeros((4,4))
+
+    # dFx[0,0] = 0 # dF1/dx1⋅dx1 = (F1(X,U)-F1(X-h1,U))/h = 0
+    # dFx[0,1] = 0 # dF1/dx2⋅dx2 = (F1(X,U)-F1(X-h2,U))/h = 0
+    dFx[0,2] = 1 # dF1/dx3⋅dx3 = (F1(X,U)-F1(X-h3,U))/h = 1
+    # dFx[0,3] = 0 # dF1/dx4⋅dx4 = (F1(X,U)-F1(X-h4,U))/h = 0
+
+    # dFx[1,0] = 0 # dF2/dx1⋅dx2 = (F2(X,U)-F2(X-h1,U))/h = 0
+    # dFx[1,1] = 0 # dF2/dx2⋅dx2 = (F2(X,U)-F2(X-h2,U))/h = 0
+    # dFx[1,2] = 0 # dF2/dx3⋅dx2 = (F2(X,U)-F2(X-h3,U))/h = 1
+    dFx[1,3] = 1 # dF2/dx4⋅dx2 = (F2(X,U)-F2(X-h4,U))/h = 0
+
+    # dx3_dt is the acceleration of the cart.
+    dFx[2,0] = (dx3_dt(X,U)-dx3_dt(X-h1,U))/h
+    dFx[2,1] = (dx3_dt(X,U)-dx3_dt(X-h2,U))/h
+    dFx[2,2] = (dx3_dt(X,U)-dx3_dt(X-h3,U))/h
+    dFx[2,3] = (dx3_dt(X,U)-dx3_dt(X-h4,U))/h
+
+    # dx4_dt is the angular acceleration of the pendulum.
+    dFx[3,0] = (dx4_dt(X,U)-dx4_dt(X-h1,U))/h
+    dFx[3,1] = (dx4_dt(X,U)-dx4_dt(X-h2,U))/h
+    dFx[3,2] = (dx4_dt(X,U)-dx4_dt(X-h3,U))/h
+    dFx[3,3] = (dx4_dt(X,U)-dx4_dt(X-h4,U))/h
+
+    Phi = np.matrix(np.eye(4) + dFx*dt)
+    assert np.shape(Phi)==(4,4) \
+        and str(type(Phi))=="<class 'numpy.matrixlib.defmatrix.matrix'>", \
+    "Phi must be a (4,4) numpy matrix. Not " + str(type(Phi)) + " of shape " + str(np.shape(Phi)) + "."
+    return(Phi)
 def return_B(X,U,dt):
     """
-    Takes in the state vector, X, of shape (4,) and a number U, and outputs a matrix of shape (4,1)
+    Takes in the state vector (X), the input vector (U) and returns the discretized and linearized input matrix, B.
+
+    NOTE: Although you can spend the time to calculate the explicit definitions of the derivatives of the state equations. This is unnecessary for real time control (especially when the state equations may not be perfect to begin with!). Instead, we can approximate the derivative by the difference quotient. For explicit functions, please see functions below (unused).
+
+    #######################
+    ##### NEED TO DO: #####
+    #######################
+
+    [ ] - Create tests that ensure that X and U are the correct dimensions.
+    [ ] - Create tests to make sure that the outputs are of the correct sizes.
     """
-    assert np.shape(X)==(4,) and str(type(X))=="<class 'numpy.ndarray'>", \
-        "X must be an numpy array of shape (4,)"
+    assert (str(type(X)) in ["<class 'numpy.ndarray'>"]
+            and np.shape(X)==(4,)), "Error with the type and shape of X ["+ fnState_And_Control_Transition_Matrices.__name__+"()]."
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
@@ -1011,22 +1148,29 @@ def return_B(X,U,dt):
             "<class 'numpy.int32'>",
             "<class 'numpy.int64'>"],\
         "U must be a number. Not " + str(type(U)) + "."
-    result = (
-        np.matrix(
-            [
-            [0],
-            [0],
-            [(dt)/(m1 + m2*(np.sin(X[1])**2))],
-            [(-np.cos(X[1])*dt/L)/(m1 + m2*(np.sin(X[1])**2))]
-            ]
-        )
-    )
 
-    assert np.shape(result)==(4,1) \
-            and str(type(result))=="<class 'numpy.matrixlib.defmatrix.matrix'>", \
-        "result must be a (4,1) numpy matrix. Not " + str(type(result)) + " of shape " + str(np.shape(result)) + "."
+    # Removed the U split into two scalars because U is already a scalar.
 
-    return(result)
+    h1 = np.array([h,0,0,0])
+    h2 = np.array([0,h,0,0])
+    h3 = np.array([0,0,h,0])
+    h4 = np.array([0,0,0,h])
+
+    #Build the dFu matrix
+
+    dFu = np.zeros((4,1))
+
+    dFu[0,0] = 0
+    dFu[1,0] = 0
+    dFu[2,0] = (dx3_dt(X,U)-dx3_dt(X,U-h))/h
+    dFu[3,0] = (dx4_dt(X,U)-dx4_dt(X,U-h))/h
+
+    B = np.matrix(dFu*dt)
+    assert np.shape(B)==(4,1) \
+            and str(type(B))=="<class 'numpy.matrixlib.defmatrix.matrix'>", \
+        "B must be a (4,1) numpy matrix. Not " + str(type(B)) + " of shape " + str(np.shape(B)) + "."
+
+    return(B)
 def return_linearized_dynamics_matrices(X,U,dt):
     """
     Takes in the input U and the the corresponding output X, as well as dt and returns two lists that contain the linearized dynamic matrices for each timestep for range(len(Time)-1).
@@ -1071,21 +1215,6 @@ def return_l_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix([[(R/2)*U**2]])
@@ -1139,22 +1268,6 @@ def return_lx_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
-
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
@@ -1208,21 +1321,6 @@ def return_lu_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix([[R*U]])
@@ -1257,21 +1355,6 @@ def return_lxu_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix([[0],[0],[0],[0]])
@@ -1304,21 +1387,6 @@ def return_lux_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix([[0,0,0,0]])
@@ -1353,21 +1421,6 @@ def return_luu_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix([[R]])
@@ -1400,21 +1453,6 @@ def return_lxx_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.matrix(
@@ -1503,94 +1541,147 @@ def return_lxx_func(RunningCost='Minimize Input Energy'):
                             ) * dt
     return(result)
 
-def return_quadratic_cost_function_expansion_variables(
-        X,U,dt,
-        RunningCost="Minimize Input Energy"):
+# def return_quadratic_cost_function_expansion_variables(
+#         X,U,dt,
+#         RunningCost="Minimize Input Energy"):
+#     """
+#     Takes in the input U and the the corresponding output X, as well as dt and returns lists that contain the coefficient matrices for the quadratic expansion of the cost function (l(x,u)) for each timestep for range(len(Time)-1).
+#     """
+#
+#     # returns a list of length len(Time)-1, each element with shape (1,1), where n is the number of states.
+#     l_func = return_l_func(RunningCost=RunningCost)
+#     l = list(
+#             map(
+#                 lambda X,U: l_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     # returns a list of length len(Time)-1, each element with shape (n,1), where n is the number of states.
+#     lx_func = return_lx_func(RunningCost=RunningCost)
+#     lx = list(
+#             map(
+#                 lambda X,U: lx_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     # returns a list of length len(Time)-1, each element with shape (m,1), where n is the number of states.
+#     lu_func = return_lu_func(RunningCost=RunningCost)
+#     lu = list(
+#             map(
+#                 lambda X,U: lu_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     # returns a list of length len(Time)-1, each element with shape (m,n), where m is the number of inputs and n is the number of states.
+#     lux_func = return_lux_func(RunningCost=RunningCost)
+#     lux = list(
+#             map(
+#                 lambda X,U: lux_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     # returns a list of length len(Time)-1, each element with shape (n,m), where n is the number of states and m is the number of inputs.
+#     lxu_func = return_lxu_func(RunningCost=RunningCost)
+#     lxu = list(
+#             map(
+#                 lambda X,U: lxu_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     # returns a list of length len(Time)-1, each element with shape (m,m), where m is the number of inputs.
+#     luu_func = return_luu_func(RunningCost=RunningCost)
+#     luu = list(
+#             map(
+#                 lambda X,U: luu_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     # returns a list of length len(Time)-1, each element with shape (n,n), where n is the number of states.
+#     lxx_func = return_lxx_func(RunningCost=RunningCost)
+#     lxx = list(
+#             map(
+#                 lambda X,U: lxx_func(X,U,dt),
+#                 X[:,1:].T,
+#                 U
+#             )
+#         )
+#
+#     return(l,lx,lu,lux,lxu,luu,lxx)
+def return_quadratic_cost_function_expansion_variables(X,U,dt):
     """
     Takes in the input U and the the corresponding output X, as well as dt and returns lists that contain the coefficient matrices for the quadratic expansion of the cost function (l(x,u)) for each timestep for range(len(Time)-1).
     """
 
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
-
     # returns a list of length len(Time)-1, each element with shape (1,1), where n is the number of states.
-    l_func = return_l_func(RunningCost=RunningCost)
     l = list(
             map(
-                lambda X,U: l_func(X,U,dt),
+                lambda X,U: U.T * R * U * dt,
                 X[:,1:].T,
                 U
             )
         )
 
     # returns a list of length len(Time)-1, each element with shape (n,1), where n is the number of states.
-    lx_func = return_lx_func(RunningCost=RunningCost)
     lx = list(
             map(
-                lambda X,U: lx_func(X,U,dt),
+                lambda X,U: np.matrix(np.zeros((4,1)))*dt,
                 X[:,1:].T,
                 U
             )
         )
 
     # returns a list of length len(Time)-1, each element with shape (m,1), where n is the number of states.
-    lu_func = return_lu_func(RunningCost=RunningCost)
     lu = list(
             map(
-                lambda X,U: lu_func(X,U,dt),
+                lambda X,U: R * U * dt,
                 X[:,1:].T,
                 U
             )
         )
 
     # returns a list of length len(Time)-1, each element with shape (m,n), where m is the number of inputs and n is the number of states.
-    lux_func = return_lux_func(RunningCost=RunningCost)
     lux = list(
             map(
-                lambda X,U: lux_func(X,U,dt),
+                lambda X,U: np.matrix(np.zeros((1,4)))*dt,
                 X[:,1:].T,
                 U
             )
         )
 
     # returns a list of length len(Time)-1, each element with shape (n,m), where n is the number of states and m is the number of inputs.
-    lxu_func = return_lxu_func(RunningCost=RunningCost)
     lxu = list(
             map(
-                lambda X,U: lxu_func(X,U,dt),
+                lambda X,U: np.matrix(np.zeros((4,1)))*dt,
                 X[:,1:].T,
                 U
             )
         )
 
     # returns a list of length len(Time)-1, each element with shape (m,m), where m is the number of inputs.
-    luu_func = return_luu_func(RunningCost=RunningCost)
     luu = list(
             map(
-                lambda X,U: luu_func(X,U,dt),
+                lambda X,U: R*dt,
                 X[:,1:].T,
                 U
             )
         )
 
     # returns a list of length len(Time)-1, each element with shape (n,n), where n is the number of states.
-    lxx_func = return_lxx_func(RunningCost=RunningCost)
     lxx = list(
             map(
-                lambda X,U: lxx_func(X,U,dt),
+                lambda X,U: np.matrix(np.zeros((4,4)))*dt,
                 X[:,1:].T,
                 U
             )
@@ -1604,21 +1695,6 @@ def return_running_cost_func(RunningCost='Minimize Input Energy'):
 
     RunningCost should be either 'Minimize Input Energy' (Default), 'Minimize time away from target angle', or 'Minimize time away from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(RunningCost)==str:
-        assert RunningCost in ['Minimize Input Energy',
-                    'Minimize time away from target angle',
-                    'Minimize time away from target angular velocity',
-                    'Minimize time away from initial position'],\
-            "RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'."
-    else:
-        assert type(RunningCost)==list, "RunningCost must be a list of cost types."
-        for el in RunningCost:
-            assert type(el)==str, "Each element of RunningCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize Input Energy',
-                        'Minimize time away from target angle',
-                        'Minimize time away from target angular velocity',
-                        'Minimize time away from initial position'],\
-                "Each element of RunningCost must be either 'Minimize Input Energy','Minimize time away from target angle', 'Minimize time away from target angular velocity', or 'Minimize time away from initial position'. '" + el + "' not accepted."
 
     if "Minimize Input Energy" in RunningCost:
         result1 = lambda X,U,dt: np.trapz((R/2)*U**2,dx=dt)
@@ -1670,26 +1746,35 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
 
     Cost should be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'. To be set upstream by linearized cost function.
     """
-    if type(TerminalCost)==str:
-        assert TerminalCost in ['Minimize final angle from target angle',
-                'Minimize final angular velocity from target angular velocity'],\
-            "TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'."
+    if "Minimize final position from target position" in TerminalCost:
+        """
+        (k1/2)*(X[0]-TargetPosition)**2
+        """
+        result1 = lambda X,U,dt: k1*(1/2)*(X[0,-1]-TargetPosition)**2
+        result1_grad = lambda X,U,dt:\
+            np.matrix([[k1*(X[0,-1]-TargetPosition)],[0],[0],[0]])
+        result1_hess = lambda X,U,dt: np.matrix(
+                                [[k1,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0]])
     else:
-        assert type(TerminalCost)==list, "TerminalCost must be a list of cost types."
-        for el in TerminalCost:
-            assert type(el)==str, "Each element of TerminalCost must be a string. Not " + str(type(el)) + "."
-            assert el in ['Minimize final angle from target angle',
-                    'Minimize final angular velocity from target angular velocity'],\
-                "Each element of TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'. '" + el + "' not accepted."
-
+        result1 = lambda X,U,dt: 0
+        result1_grad = lambda X,U,dt:\
+            np.matrix([[0],[0],[0],[0]])
+        result1_hess = lambda X,U,dt: np.matrix(
+                                [[0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0]])
     if "Minimize final angle from target angle" in TerminalCost:
         """
         In order to approximate (k2/2)*(X[1]-TargetAngle)**2 that repeats every 2*np.pi we must have a time shifted fourier series expansion. c2*(np.pi**2)/6 + sum([((-1)**n) * (2*c2/(n**2)) * np.cos(n*(X[1]-TargetAngle)) for n in range(1,N)])
         """
-        result1 = lambda X,U,dt: k2*(1/2)*(X[1,-1]-TargetAngle)**2
-        result1_grad = lambda X,U,dt:\
+        result2 = lambda X,U,dt: k2*(1/2)*(X[1,-1]-TargetAngle)**2
+        result2_grad = lambda X,U,dt:\
             np.matrix([[0],[k2*(X[1,-1]-TargetAngle)],[0],[0]])
-        result1_hess = lambda X,U,dt: np.matrix(
+        result2_hess = lambda X,U,dt: np.matrix(
                                 [[0,0,0,0],
                                 [0,k2,0,0],
                                 [0,0,0,0],
@@ -1733,25 +1818,6 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
         #                             [0,0,0,0],
         #                             [0,0,0,0]])
     else:
-        result1 = lambda X,U,dt: 0
-        result1_grad = lambda X,U,dt:\
-            np.matrix([[0],[0],[0],[0]])
-        result1_hess = lambda X,U,dt: np.matrix(
-                                [[0,0,0,0],
-                                [0,0,0,0],
-                                [0,0,0,0],
-                                [0,0,0,0]])
-
-    if "Minimize final angular velocity from target angular velocity" in TerminalCost:
-        result2 = lambda X,U,dt: k4*(1/2)*(X[3,-1]-TargetAngularVelocity)**2
-        result2_grad = lambda X,U,dt:\
-            np.matrix([[0],[0],[0],[k4*(X[3,-1]-TargetAngularVelocity)]])
-        result2_hess = lambda X,U,dt: np.matrix(
-                        [[0,0,0,0],
-                        [0,0,0,0],
-                        [0,0,0,0],
-                        [0,0,0,k4]])
-    else:
         result2 = lambda X,U,dt: 0
         result2_grad = lambda X,U,dt:\
             np.matrix([[0],[0],[0],[0]])
@@ -1760,14 +1826,65 @@ def return_terminal_cost_func(TerminalCost='Minimize final angle',
                                 [0,0,0,0],
                                 [0,0,0,0],
                                 [0,0,0,0]])
+    if "Minimize final velocity from target velocity" in TerminalCost:
+        """
+        (k3/2)*(X[2]-TargetVelocity)**2
+        """
+        result3 = lambda X,U,dt: k3*(1/2)*(X[2,-1]-TargetVelocity)**2
+        result3_grad = lambda X,U,dt:\
+            np.matrix([[0],[0],[k3*(X[2,-1]-TargetVelocity)],[0]])
+        result3_hess = lambda X,U,dt: np.matrix(
+                                [[0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,k3,0],
+                                [0,0,0,0]])
+    else:
+        result3 = lambda X,U,dt: 0
+        result3_grad = lambda X,U,dt:\
+            np.matrix([[0],[0],[0],[0]])
+        result3_hess = lambda X,U,dt: np.matrix(
+                                [[0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0]])
+    if "Minimize final angular velocity from target angular velocity" in TerminalCost:
+        result4 = lambda X,U,dt: k4*(1/2)*(X[3,-1]-TargetAngularVelocity)**2
+        result4_grad = lambda X,U,dt:\
+            np.matrix([[0],[0],[0],[k4*(X[3,-1]-TargetAngularVelocity)]])
+        result4_hess = lambda X,U,dt: np.matrix(
+                        [[0,0,0,0],
+                        [0,0,0,0],
+                        [0,0,0,0],
+                        [0,0,0,k4]])
+    else:
+        result4 = lambda X,U,dt: 0
+        result4_grad = lambda X,U,dt:\
+            np.matrix([[0],[0],[0],[0]])
+        result4_hess = lambda X,U,dt: np.matrix(
+                                [[0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0],
+                                [0,0,0,0]])
 
-    result = lambda X,U,dt: result1(X,U,dt) \
-                            + result2(X,U,dt)
+    result = lambda X,U,dt: (
+            result1(X,U,dt)
+            + result2(X,U,dt)
+            + result3(X,U,dt)
+            + result4(X,U,dt)
+        )
     if ReturnGradientAndHessian:
-        result_grad = lambda X,U,dt: result1_grad(X,U,dt) \
-                                        + result2_grad(X,U,dt)
-        result_hess = lambda X,U,dt: result1_hess(X,U,dt) \
-                                        + result2_hess(X,U,dt)
+        result_grad = lambda X,U,dt: (
+                result1_grad(X,U,dt)
+                + result2_grad(X,U,dt)
+                + result3_grad(X,U,dt)
+                + result4_grad(X,U,dt)
+            )
+        result_hess = lambda X,U,dt: (
+                result1_hess(X,U,dt)
+                + result2_hess(X,U,dt)
+                + result3_hess(X,U,dt)
+                + result4_hess(X,U,dt)
+            )
         return(result,result_grad,result_hess)
     else:
         return(result)
@@ -1778,8 +1895,9 @@ def return_empty_lists_for_quadratic_expansion_of_Q(length):
     Qux = [None]*length
     Qxu = [None]*length
     Quu = [None]*length
+    Quu_inv = [None]*length
     Qxx = [None]*length
-    return(Qu,Qx,Qux,Qxu,Quu,Qxx)
+    return(Qu,Qx,Qux,Qxu,Quu,Quu_inv,Qxx)
 
 def cart_pendulum_ddp(**kwargs):
 
@@ -1804,22 +1922,27 @@ def cart_pendulum_ddp(**kwargs):
     TerminalCost = kwargs.get("TerminalCost","Minimize final angle from target angle")
     if type(TerminalCost)==str:
         assert TerminalCost in ['Minimize final angle from target angle',
-                'Minimize final angular velocity from target angular velocity'],\
-            "TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'."
+                'Minimize final position from target position',
+                'Minimize final angular velocity from target angular velocity',
+                'Minimize final velocity from target velocity'],\
+            "TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final position from target position','Minimize final angular velocity from target angular velocity','Minimize final velocity from target velocity'."
     else:
         assert type(TerminalCost)==list, "TerminalCost must be a list of cost types."
         for el in TerminalCost:
             assert type(el)==str, "Each element of TerminalCost must be a string. Not " + str(type(el)) + "."
             assert el in ['Minimize final angle from target angle',
-                    'Minimize final angular velocity from target angular velocity'],\
-                "Each element of TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final angular velocity from target angular velocity'. '" + el + "' not accepted."
-    terminal_cost_func,terminal_cost_grad_func,terminal_cost_hess_func = \
-        return_terminal_cost_func(
+                    'Minimize final position from target position',
+                    'Minimize final angular velocity from target angular velocity',
+                    'Minimize final velocity from target velocity'],\
+                "Each element of TerminalCost must be either 'Minimize final angle from target angle' (Default), 'Minimize final position from target position','Minimize final angular velocity from target angular velocity','Minimize final velocity from target velocity'. '" + el + "' not accepted."
+    (terminal_cost_func,
+    terminal_cost_grad_func,
+    terminal_cost_hess_func) = return_terminal_cost_func(
             TerminalCost=TerminalCost,
             ReturnGradientAndHessian=True
-            )
+        )
 
-    ICs = kwargs.get("ICs",[0,0,0,0]) # in degrees
+    ICs = kwargs.get("ICs",[0,180,0,0]) # in degrees
     assert type(ICs)==list and len(ICs)==4, "ICs must be a list of length 4."
     LocationStrings = ["1st", "2nd", "3rd", "4th"]
     for i in range(4):
@@ -1842,7 +1965,7 @@ def cart_pendulum_ddp(**kwargs):
             "<class 'numpy.float64'>"],\
         "dt must be a number."
 
-    N_seconds = kwargs.get("N_seconds",10)
+    N_seconds = kwargs.get("N_seconds",3)
     assert str(type(N_seconds)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "N_seconds must be a number."
 
@@ -1859,7 +1982,6 @@ def cart_pendulum_ddp(**kwargs):
     thresh = kwargs.get("thresh",1e-2)
     assert str(type(thresh)) in ["<class 'numpy.float'>","<class 'int'>","<class 'float'>","<class 'numpy.int32'>","<class 'numpy.int64'>","<class 'numpy.float64'>"],\
         "thresh must be a number."
-
 
     TotalX = []
     TotalU = []
@@ -1900,49 +2022,49 @@ def cart_pendulum_ddp(**kwargs):
 
         Phi,B = return_linearized_dynamics_matrices(X,U,dt)
         l,lx,lu,lux,lxu,luu,lxx = \
-                return_quadratic_cost_function_expansion_variables(X,U,dt,RunningCost=RunningCost)
+                return_quadratic_cost_function_expansion_variables(X,U,dt)
 
         # Backward Pass
-        V = [np.matrix([[terminal_cost_func(X,U,dt)]])]
-        Vx = [terminal_cost_grad_func(X,U,dt)]
-        Vxx = [terminal_cost_hess_func(X,U,dt)]
+        V = [None]*len(Time)
+        Vx = [None]*len(Time)
+        Vxx = [None]*len(Time)
 
-        Qu,Qx,Qux,Qxu,Quu,Qxx = \
+        V[-1] = np.matrix([[terminal_cost_func(X,U,dt)]])
+        Vx[-1] = terminal_cost_grad_func(X,U,dt)
+        Vxx[-1] = terminal_cost_hess_func(X,U,dt)
+
+        Qu,Qx,Qux,Qxu,Quu,Quu_inv,Qxx = \
                 return_empty_lists_for_quadratic_expansion_of_Q(len(Time)-1)
 
-        for i in range(len(Time)-1):
-            Qx[-(i+1)] = lx[-(i+1)] + Phi[-(i+1)].T*Vx[-1]
-            Qu[-(i+1)] = lu[-(i+1)] + B[-(i+1)].T*Vx[-1]
-            Qux[-(i+1)] = lux[-(i+1)] + B[-(i+1)].T*Vxx[-1]*Phi[-(i+1)]
-            Qxu[-(i+1)] = lxu[-(i+1)] + Phi[-(i+1)].T*Vxx[-1]*B[-(i+1)]
-            Quu[-(i+1)] = luu[-(i+1)] + B[-(i+1)].T*Vxx[-1]*B[-(i+1)]
-            Qxx[-(i+1)] = lxx[-(i+1)] + Phi[-(i+1)].T*Vxx[-1]*Phi[-(i+1)]
+        for i in reversed(range(len(Time)-1)):
+            Qx[i] = lx[i] + Phi[i].T * Vx[i+1]
+            Qu[i] = lu[i] + B[i].T * Vx[i+1]
+            Qux[i] = lux[i] + B[i].T * Vxx[i+1] * Phi[i]
+            Qxu[i] = lxu[i] + Phi[i].T * Vxx[i+1] * B[i]
+            Quu[i] = luu[i] + B[i].T * Vxx[i+1] * B[i]
+            Qxx[i] = lxx[i] + Phi[i].T * Vxx[i+1] * Phi[i]
 
-
+            Quu_inv[i] = Quu[i]**(-1)
             # It appears that the choice of this does not matter... Ran it for 5 seconds, Target = pi, and the final cost was always 621.50
-            V.append(
-                    l[-(i+1)]
-                    + V[-1]
-                    - (1/2)*Qu[-(i+1)].T*(Quu[-(i+1)]**(-1))*Qu[-(i+1)]
+            V[i] = (
+                    l[i]
+                    + V[i+1]
+                    - (1/2)*Qu[i].T*Quu_inv[i]*Qu[i]
                 )
-            # V.append(
+            # V[i] = (
             #          V[-1]
-            #         - Qu[-(i+1)].T*(Quu[-(i+1)]**(-1))*Qu[-(i+1)]
+            #         - Qu[i].T*Quu_inv[i]*Qu[i]
             #     )
 
-            Vx.append(
-                    Qx[-(i+1)]
-                    - Qxu[-(i+1)]*(Quu[-(i+1)]**(-1))*Qu[-(i+1)]
+            Vx[i] = (
+                    Qx[i]
+                    - Qxu[i]*Quu_inv[i]*Qu[i]
                 )
 
-            Vxx.append(
-                    Qxx[-(i+1)]
-                    - Qxu[-(i+1)]*(Quu[-(i+1)]**(-1))*Qux[-(i+1)]
+            Vxx[i] = (
+                    Qxx[i]
+                    - Qxu[i]*Quu_inv[i]*Qux[i]
                 )
-
-        V = list(reversed(V))
-        Vx = list(reversed(Vx))
-        Vxx = list(reversed(Vxx))
 
         dx = [None]*len(Time)
         du = [None]*(len(Time)-1)
@@ -1951,10 +2073,13 @@ def cart_pendulum_ddp(**kwargs):
 
         # Forward Pass
         for i in range(len(Time)-1):
-            du[i] = -Quu[i]**(-1)*(Qux[i]*dx[i] + Qu[i])
+            du[i] = -Quu_inv[i]*(Qux[i]*dx[i] + Qu[i])
             dx[i+1] = Phi[i]*dx[i] + B[i]*du[i]
 
-        U = np.array(U + np.concatenate(du,axis=0).T)[0]
+        LearningRate = 0.2
+        U = np.array(
+                U + LearningRate*np.concatenate(du,axis=0).T
+                )[0]
 
         IterationNumber+=1
 
@@ -1989,30 +2114,38 @@ def cart_pendulum_ddp(**kwargs):
 
 m1 = 10 # kg
 m2 = 1 # kg
-L = 0.5 # m
-gr = 9.8 # m/s²
-b1 = 10 # kg/s - Damping coefficient for cart position
-b2 = 1 # Nms - Damping coefficient for pendulum angle
+L = 1.5 # m
+gr = 9.81 # m/s²
+b1 = 0 # kg/s - Damping coefficient for cart position
+b2 = 0 # Nms - Damping coefficient for pendulum angle
 
-R = 1 # weight of "Minimize Input Energy" in RunningCost'
+R = 1e-3 # weight of "Minimize Input Energy" in RunningCost'
 
-c1 = 1 # weight of "Minimize time away from initial position" in RunningCost
-c2 = 100 # weight of "Minimize time away from target angle" in RunningCost
+c1 = 0 # weight of "Minimize time away from initial position" in RunningCost
+c2 = 0 # weight of "Minimize time away from target angle" in RunningCost
 c3 = 0 # UNASSIGNED weight of "Minimize time away from target cart velocity" in RunningCost
-c4 = 100 # weight of "Minimize time away from target angular velocity" in RunningCost
+c4 = 0 # weight of "Minimize time away from target angular velocity" in RunningCost
 
-k1 = 0 # UNASSIGNED weight of "Minimize final position from target position" in TerminalCost
-k2 = 100 # weight of 'Minimize final angle from target angle' in TerminalCost
-k3 = 0 # UNASSIGNED weight of "Minimize final velocity from target velocity" in TerminalCost
-k4 = 100 # weight of  'Minimize final angular velocity from target angular velocity' in TerminalCost
+k1 = 5 # UNASSIGNED weight of "Minimize final position from target position" in TerminalCost
+k2 = 1000 # weight of 'Minimize final angle from target angle' in TerminalCost
+k3 = 5 # UNASSIGNED weight of "Minimize final velocity from target velocity" in TerminalCost
+k4 = 50 # weight of  'Minimize final angular velocity from target angular velocity' in TerminalCost
 
+TargetPosition = 0
 TargetAngle = 0 #in radians
+TargetVelocity = 0
 TargetAngularVelocity = 0 #in radians
 
-RunningCost = ["Minimize Input Energy",
-                "Minimize time away from target angle",
-                "Minimize time away from target angular velocity",
-                "Minimize time away from initial position"][:]
+RunningCost = [
+        "Minimize Input Energy",
+        "Minimize time away from target angle",
+        "Minimize time away from target angular velocity",
+        "Minimize time away from initial position"
+    ][0]
 
-TerminalCost = ["Minimize final angle from target angle",
-                "Minimize final angular velocity from target angular velocity"][:]
+TerminalCost = [
+        'Minimize final angle from target angle',
+        'Minimize final position from target position',
+        'Minimize final angular velocity from target angular velocity',
+        'Minimize final velocity from target velocity'
+    ][:]
