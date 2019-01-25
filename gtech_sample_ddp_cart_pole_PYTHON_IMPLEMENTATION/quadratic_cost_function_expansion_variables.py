@@ -1,33 +1,72 @@
 import numpy as np
+from params import *
 
-def return_quadratic_cost_function_expansion_variables(X,U,R,**kwargs):
+def return_quadratic_cost_function_expansion_variables(X,U,dt):
     """
-    Takes in the state vector (X) and the input scalar (U) and the running cost scalar R (as well as some unused vars - k and dt) and outputs the derivatives of the running cost needed for the quadratic approximation of the cost.
-
-    #######################
-    ##### NEED TO DO: #####
-    #######################
-
-    [ ] - Create tests that ensure that X, U, and R are the correct dimensions.
-    [ ] - Create tests to make sure that the output are of the correct sizes.
-
-    #######################
-    ####### **kwargs ######
-    #######################
-
-    1) i -
-        Discrete time step with default set as None.
-
-    2) dt -
-        Time step with default set as None.
-
+    Takes in the input U and the the corresponding output X, as well as dt and returns lists that contain the coefficient matrices for the quadratic expansion of the cost function (l(x,u)) for each timestep for range(len(Time)-1).
     """
 
-    l = U.T * R * U
-    lx = np.matrix(np.zeros((4,1)))
-    lxx = np.matrix(np.zeros((4,4)))
-    lu = R * U
-    luu = R
-    lux = np.matrix(np.zeros((1,4)))
+    # returns a list of length len(Time)-1, each element with shape (1,1), where n is the number of states.
+    l = list(
+            map(
+                lambda X,U: U.T * R * U * dt,
+                X[:,1:].T,
+                U
+            )
+        )
 
-    return(l,lx,lxx,lu,luu,lux)
+    # returns a list of length len(Time)-1, each element with shape (n,1), where n is the number of states.
+    lx = list(
+            map(
+                lambda X,U: np.matrix(np.zeros((4,1)))*dt,
+                X[:,1:].T,
+                U
+            )
+        )
+
+    # returns a list of length len(Time)-1, each element with shape (m,1), where n is the number of states.
+    lu = list(
+            map(
+                lambda X,U: R * U * dt,
+                X[:,1:].T,
+                U
+            )
+        )
+
+    # returns a list of length len(Time)-1, each element with shape (m,n), where m is the number of inputs and n is the number of states.
+    lux = list(
+            map(
+                lambda X,U: np.matrix(np.zeros((1,4)))*dt,
+                X[:,1:].T,
+                U
+            )
+        )
+
+    # returns a list of length len(Time)-1, each element with shape (n,m), where n is the number of states and m is the number of inputs.
+    lxu = list(
+            map(
+                lambda X,U: np.matrix(np.zeros((4,1)))*dt,
+                X[:,1:].T,
+                U
+            )
+        )
+
+    # returns a list of length len(Time)-1, each element with shape (m,m), where m is the number of inputs.
+    luu = list(
+            map(
+                lambda X,U: R*dt,
+                X[:,1:].T,
+                U
+            )
+        )
+
+    # returns a list of length len(Time)-1, each element with shape (n,n), where n is the number of states.
+    lxx = list(
+            map(
+                lambda X,U: np.matrix(np.zeros((4,4)))*dt,
+                X[:,1:].T,
+                U
+            )
+        )
+
+    return(l,lx,lu,lux,lxu,luu,lxx)

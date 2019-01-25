@@ -22,29 +22,18 @@ from cost_function import *
 from animate import *
 import time
 
-# h is the step used to determine the derivative
-h = 0.000001
-
 # Horizon
 Horizon = 300 # 1.5sec
+
 # Number of Iterations
 NumberOfIterations = 100
 
 # Discretization
 dt = 0.01
-global timeee
-timeee = Horizon*dt
 
-# Weight in Final State:
-Q_f = np.matrix(np.zeros((4,4)))
-Q_f[0,0] = 5
-Q_f[1,1] = 1000
-Q_f[2,2] = 5
-Q_f[3,3] = 50
-
-# Weight in the Control:
-# Modified from original because our control is only one dimensional.
-R = 1e-3
+# TotalX and TotalU
+TotalX = []
+TotalU = []
 
 # Initial Configuration:
 X_o = np.zeros((4,))
@@ -55,10 +44,15 @@ X_o[1] = np.pi
 U = np.zeros((Horizon-1,))
 dU = np.zeros((Horizon-1,))
 
-
 # Initial trajectory:
-X = np.zeros((4,Horizon))
+X = forward_integrate_dynamics(
+        X_o,
+        U=U,
+        Horizon=Horizon,
+        dt=dt)
 
+TotalX.append(X)
+TotalU.append(U)
 
 # Target:
 p_target = np.matrix(
@@ -73,24 +67,21 @@ p_target = np.matrix(
 # Learning Rate:
 LearningRate = 0.2
 
-q0 = [None]*Horizon # Scalar list
-q_k = [None]*Horizon # Each element must be a (4,1) matrix. Place assertion function or create test.
-Q_k = [None]*Horizon # Each element must be a (4,4) matrix. Place assertion function or create test.
-r_k = [None]*Horizon # Scalar list
-R_k = [None]*Horizon # Scalar list
-P_k = [None]*Horizon # Each element must be a (1,4) matrix. Place assertion function or create test.
-
-Phi = [None]*Horizon # Each element must be a (4,4) matrix. Place assertion function or create test.
-B = [None]*Horizon # Each element must be a (4,4) matrix. Place assertion function or create test.
-
 V = [None]*Horizon # Scalar list
 Vx = [None]*Horizon # Each element must be a (4,1) matrix. Place assertion function or create test.
 Vxx = [None]*Horizon # Each element must be a (4,4) matrix. Place assertion function or create test.
 
-l_k = [None]*Horizon # Scalar list
-L_k = [None]*Horizon # Each element must be a (1,4) matrix. Place assertion function or create test.
+def return_empty_lists_for_quadratic_expansion_of_Q(length):
+    Qu = [None]*length
+    Qx = [None]*length
+    Qux = [None]*length
+    Qxu = [None]*length
+    Quu = [None]*length
+    Quu_inv = [None]*length
+    Qxx = [None]*length
+    return(Qu,Qx,Qux,Qxu,Quu,Quu_inv,Qxx)
 
-Cost = [None]*NumberOfIterations
+TotalCost = [None]*NumberOfIterations
 
 StartTime = time.time()
 for k in range(NumberOfIterations):
@@ -99,20 +90,8 @@ for k in range(NumberOfIterations):
     #> Quadratic Approximations of the cost function >
     #------------------------------------------------>
 
-    for  j in range(Horizon-1):
-        # dFx,dFu = return_linearized_dynamics_matrices(X[:,j],U[j])
-        Phi[j] = return_Phi(X[:,j],U[j],dt)
-        B[j] = return_B(X[:,j],U[j],dt)
-        '''
-        Note: for k==0, we did not pass U through FWD model to predict X over time. This is done at the end of the trial.
-        '''
-        l,lx,lxx,lu,luu,lux = return_quadratic_cost_function_expansion_variables(X[:,j],U[j],R)
-        q0[j] = l*dt
-        q_k[j] = lx*dt
-        Q_k[j] = lxx*dt
-        r_k[j] = lu*dt
-        R_k[j] = luu*dt
-        P_k[j] = lux*dt
+    Phi,B = return_linearized_dynamics_matrices(X,U,dt)
+    l,lx,lu,lux,lxu,luu,lxx = return_quadratic_cost_function_expansion_variables(X,U,dt)
 
     #------------------------------------------------>
     #--------------> Find the controls -------------->
@@ -130,58 +109,46 @@ for k in range(NumberOfIterations):
     #----> Backpropagation of the Value Function ---->
     #------------------------------------------------>
 
+    Qu,Qx,Qux,Qxu,Quu,Quu_inv,Qxx = return_empty_lists_for_quadratic_expansion_of_Q(Horizon)
     for j in reversed(range(Horizon-1)):
+        Qx[j] = lx[j] + Phi[j].T * Vx[j+1]
+        Qu[j] = lu[j] +  B[j].T * Vx[j+1]
+        Qux[j] = lux[j] + B[j].T * Vxx[j+1] * Phi[j]
+        Qxu[j] = lxu[j] + Phi[j].T * Vxx[j+1] * B[j]
+        Quu[j] = luu[j] + B[j].T * Vxx[j+1] * B[j]
+        Qxx[j] = lxx[j] + Phi[j].T * Vxx[j+1] * Phi[j]
 
-        H = R_k[j] + B[j].T*Vxx[j+1]*B[j]
-        G = P_k[j] + B[j].T*Vxx[j+1]*Phi[j]
-        g = r_k[j] +  B[j].T * Vx[j+1]
+        Quu_inv[j] = Quu[j]**(-1)
 
-
-        inv_H = H**(-1)
-        L_k[j] = - inv_H[0,0] * G
-        l_k[j] = - inv_H[0,0] * g
-
-
-        Vxx[j] = (
-            Q_k[j]
-            + Phi[j].T * Vxx[j+1] * Phi[j]
-            + L_k[j].T * H * L_k[j]
-            + L_k[j].T * G
-            + G.T * L_k[j]
-        )
-        Vx[j]= (
-            q_k[j]
-            + Phi[j].T * Vx[j+1]
-            + L_k[j].T * g
-            + G.T * l_k[j]
-            + L_k[j].T * H * l_k[j]
-        )
-        V[j] = (
-            q0[j]
-            + V[j+1]
-            + 0.5 * l_k[j].T * H * l_k[j]
-            + l_k[j].T * g
-        )
+        Vxx[j] = Qxx[j] - Qxu[j] * Quu_inv[j] * Qux[j]
+        Vx[j]= Qx[j] - Qxu[j] * Quu_inv[j] * Qu[j]
+        V[j] = l[j] + V[j+1] - 0.5 * Qu[j].T * Quu_inv[j] * Qu[j]
 
     #------------------------------------------------>
     #-------------> Find the controlls -------------->
     #------------------------------------------------>
 
-    u_new = np.zeros((Horizon,))
-    dx = np.matrix(np.zeros((4,1)))
+    U_new = np.zeros((Horizon-1,))
+    dX = np.matrix(np.zeros((4,1)))
     for i in range(Horizon-1):
-        du = l_k[i] + L_k[i]*dx
-        dx = Phi[i]*dx + B[i]*du
-        u_new[i] = U[i] + LearningRate*du
+        dU = -Quu_inv[j]*(Qu[i] + Qux[i]*dX)
+        dX = Phi[i]*dX + B[i]*dU
+        U_new[i] = U[i] + LearningRate*dU
 
-    U = u_new
+    U = U_new
 
     #------------------------------------------------>
     #-----> Simulation of the Nonlinear System ------>
     #------------------------------------------------>
+    X = forward_integrate_dynamics(
+            X_o,
+            U=U,
+            Horizon=Horizon,
+            dt=dt)
 
-    X = return_state_trajectories_given_U_new(X_o,u_new,dt)
-    Cost[k] =  return_cost_for_a_given_trial(
+    TotalX.append(X)
+    TotalU.append(U)
+    TotalCost[k] =  return_cost_for_a_given_trial(
             X,
             U,
             p_target,
@@ -191,8 +158,8 @@ for k in range(NumberOfIterations):
         )
 
     print(
-        'iLQG Iteration %d,  Current Cost = %f \n'
-        % (k+1,Cost[k])
+        'iLQG Iteration %d,  Current TotalCost = %f \n'
+        % (k+1,TotalCost[k])
     )
 
 print("Total Run Time: " + '%.2f'%(time.time()-StartTime) + "s")
@@ -204,6 +171,7 @@ Time = np.arange(0,Endtime,dt)
 #------------------------------------------------------->
 
 fig1 = plt.figure(figsize=(12,8))
+plt.suptitle("Cart Pole Control via DDP",fontsize=16)
 
 plt.subplot(321)
 plt.plot(
@@ -254,9 +222,9 @@ plt.ylabel('Angular Velocity',fontsize=16)
 plt.grid(True)
 
 plt.subplot(3,2,(5,6))
-plt.plot(Cost,linewidth=2)
+plt.plot(TotalCost,linewidth=2)
 plt.xlabel('Iterations',fontsize=16)
-plt.ylabel('Cost',fontsize=16)
+plt.ylabel('TotalCost',fontsize=16)
 
 animate_trajectory(Time,X,U)
 # run('animate.m')
