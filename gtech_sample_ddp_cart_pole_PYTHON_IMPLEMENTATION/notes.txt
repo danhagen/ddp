@@ -1,3 +1,8 @@
 [2019_01_24] -
     -  I have successfully swapped out the dynamics equations for the ones that I derived for the cart pendulum (from Lagrangian dynamics). The system still converges to an optimal solution even when large amounts of damping are added.
     -  I changed all of the "empty" zero arrays, that were predefined before the function began, and turned them into empty lists of a predefined length. In this way, I was able to define values in the proper matrix dimensions so that they were ready to be multiplied to create the control variables. This had no effect on the quality of the solution, but did decrease the run time from ~20s to ~15s (75%).
+
+[2019_01_25] -
+    -  Upon completely refactoring the GTech code, I was able to determine that the update policies for the back-propagation of the value function in the iLQR code are identical to those derived for DDP. Therefore, I believe this sample code was actually the code that corresponds to the DDP controller, rather than the iLQR.
+    -  I will need to try and see if I can a) change it back to iLQR and b) confirm with Evangelos that this is the case.
+    -  The functions are now independent and can be run from the command line while changing some of the values of the parameters (params). Please update the params dictionary in order to manipulate the controllers parameters. 

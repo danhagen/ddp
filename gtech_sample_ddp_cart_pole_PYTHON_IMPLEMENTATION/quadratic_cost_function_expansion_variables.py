@@ -1,11 +1,10 @@
 import numpy as np
 from params import *
 
-def return_quadratic_cost_function_expansion_variables(X,U,dt):
+def return_quadratic_cost_function_expansion_variables(X,U,R,dt):
     """
     Takes in the input U and the the corresponding output X, as well as dt and returns lists that contain the coefficient matrices for the quadratic expansion of the cost function (l(x,u)) for each timestep for range(len(Time)-1).
     """
-
     # returns a list of length len(Time)-1, each element with shape (1,1), where n is the number of states.
     l = list(
             map(

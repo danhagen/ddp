@@ -1,5 +1,27 @@
 import numpy as np
 
+# params dictionary
+
+params = {
+    "Horizon" : 300,
+    "dt" : 0.01,
+    "U_o" : None,
+    "p_target" : np.matrix([[0,0,0,0]]).T,
+    "LearningRate" : 0.2,
+    "Q_f" : np.matrix(
+            [
+                [5,0,0,0],
+                [0,1000,0,0],
+                [0,0,5,0],
+                [0,0,0,50]
+            ]
+        ),
+    "R" : 1e-3,
+    "PlotResults" : True,
+    "AnimateResults" : True,
+    "ReturnAllResults" : True,
+}
+
 # h is the step used to determine the derivative
 
 h = 0.000001
@@ -18,14 +40,3 @@ L = 1.5 # m
 # damping parameters
 b1 = 0 # Nm
 b2 = 0 # Nm
-
-# Weight in Final State:
-Q_f = np.matrix(np.zeros((4,4)))
-Q_f[0,0] = 5
-Q_f[1,1] = 1000
-Q_f[2,2] = 5
-Q_f[3,3] = 50
-
-# Weight in the Control:
-# Modified from original because our control is only one dimensional.
-R = 1e-3
