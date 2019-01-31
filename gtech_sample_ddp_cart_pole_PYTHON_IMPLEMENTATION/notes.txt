@@ -5,4 +5,7 @@
 [2019_01_25] -
     -  Upon completely refactoring the GTech code, I was able to determine that the update policies for the back-propagation of the value function in the iLQR code are identical to those derived for DDP. Therefore, I believe this sample code was actually the code that corresponds to the DDP controller, rather than the iLQR.
     -  I will need to try and see if I can a) change it back to iLQR and b) confirm with Evangelos that this is the case.
-    -  The functions are now independent and can be run from the command line while changing some of the values of the parameters (params). Please update the params dictionary in order to manipulate the controllers parameters. 
+    -  The functions are now independent and can be run from the command line while changing some of the values of the parameters (params). Please update the params dictionary in order to manipulate the controllers parameters.
+
+[2019_01_31] -
+    -  I am trying to incorporate the second derivative terms in the expansion of the dynamics. I am getting "math domain error". At first I thought it might be because we were approximating the values of the second derivative with a difference quotient (nested within a difference quotient), but after explicitly deriving the equations for the second derivatives of these functions, it appears that the math domain error persists. Need to check to see if the shape of the graph is actually translating to the desired shape. 

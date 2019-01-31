@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from params import *
 from quadratic_cost_function_expansion_variables import *
-from linearized_dynamics import *
+from quadratic_dynamics_expansion import *
 from feedforward_simulation import *
 from cost_function import *
 from animate import *
@@ -51,6 +51,8 @@ def cart_pole_DDP(X_o,**params):
     10) AnimateResults - Boolean to determine if the results of the program will be animated. Default is False.
 
     11) ReturnAllResults - Boolean to determine if all results should be returned. Default is False. (NOTE: If False, the system will only return the values for the last iteration (X,U).)
+
+
     """
     #------------------------------------------------>
     #----------> Possible Parameter Values ---------->
@@ -169,7 +171,7 @@ def cart_pole_DDP(X_o,**params):
         #> Quadratic Approximations of the cost function >
         #------------------------------------------------>
 
-        Phi,B = return_linearized_dynamics_matrices(X,U,dt)
+        Phi,B,Fxx,Fxu,Fuu = return_quadratic_dynamics_expansion(X,U,dt)
         l,lx,lu,lux,lxu,luu,lxx = return_quadratic_cost_function_expansion_variables(X,U,R,dt)
 
         #------------------------------------------------>
@@ -191,17 +193,56 @@ def cart_pole_DDP(X_o,**params):
         for j in reversed(range(Horizon-1)):
             Qx[j] = lx[j] + Phi[j].T * Vx[j+1]
             Qu[j] = lu[j] +  B[j].T * Vx[j+1]
-            Qux[j] = lux[j] + B[j].T * Vxx[j+1] * Phi[j]
-            Qxu[j] = lxu[j] + Phi[j].T * Vxx[j+1] * B[j]
-            Quu[j] = luu[j] + B[j].T * Vxx[j+1] * B[j]
-            Qxx[j] = lxx[j] + Phi[j].T * Vxx[j+1] * Phi[j]
+            # Qxu[j] = (
+            #     lxu[j]
+            #     + Phi[j].T * Vxx[j+1] * B[j]
+            #     + 0.1*np.matrix(np.tensordot(Fxu[j],Vx[j+1],axes=1)).T
+            # )
+            Qxu[j] = (
+                lxu[j]
+                + Phi[j].T * Vxx[j+1] * B[j]
+                + np.matrix(
+                    sum([
+                            Vx[j+1][i,0]*Fxu[j][:,:,i] for i in range(4)
+                    ])
+                )
+            )
+            Qux[j] = Qxu[j].T
+            # Quu[j] = (
+            #     luu[j]
+            #     + B[j].T * Vxx[j+1] * B[j]
+            #     + 0.1*np.matrix(np.tensordot(Fuu[j],Vx[j+1],axes=1))
+            # )
+            Quu[j] = (
+                luu[j]
+                + B[j].T * Vxx[j+1] * B[j]
+                + np.matrix(
+                    sum([
+                        Vx[j+1][i,0]*Fuu[j][:,:,i] for i in range(4)
+                    ])
+                )
+            )
+            # Qxx[j] = (
+            #     lxx[j]
+            #     + Phi[j].T * Vxx[j+1] * Phi[j]
+            #     + 0.1*np.matrix(np.tensordot(Fxx[j],Vx[j+1],axes=1))
+            # )
+            Qxx[j] = (
+                lxx[j]
+                + Phi[j].T * Vxx[j+1] * Phi[j]
+                + np.matrix(
+                    sum([
+                        Vx[j+1][i,0]*Fxx[j][:,:,i] for i in range(4)
+                    ])
+                )
+            )
 
             Quu_inv[j] = Quu[j]**(-1)
 
             Vxx[j] = Qxx[j] - Qxu[j] * Quu_inv[j] * Qux[j]
             Vx[j]= Qx[j] - Qxu[j] * Quu_inv[j] * Qu[j]
             # V[j] = l[j] + V[j+1] - 0.5 * Qu[j].T * Quu_inv[j] * Qu[j]
-            V[j] = V[j+1] - Qu[j].T * Quu_inv[j] * Qu[j]
+            V[j] = V[j+1] - 0.5*Qu[j].T * Quu_inv[j] * Qu[j]
 
         #------------------------------------------------>
         #-------------> Find the controlls -------------->
@@ -340,7 +381,13 @@ def cart_pole_DDP(X_o,**params):
                 "Input Bounds" : [
                         min(U),
                         max(U)
-                    ]
+                    ],
+                "V" : V,
+                "Vx" : Vx,
+                "Vxx" : Vxx,
+                "Fxx" : Fxx,
+                "Fxu" : Fxu,
+                "Fuu" : Fuu
             }
         )
     else:

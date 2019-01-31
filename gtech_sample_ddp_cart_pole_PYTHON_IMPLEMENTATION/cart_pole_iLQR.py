@@ -372,7 +372,10 @@ def cart_pole_iLQR(X_o,**params):
                 "Input Bounds" : [
                         min(U),
                         max(U)
-                    ]
+                    ],
+                "V" : V,
+                "Vx" : Vx,
+                "Vxx" : Vxx
             }
         )
     else:

@@ -16,7 +16,7 @@ def return_Phi(X,U,dt):
     [ ] - Create tests to make sure that the outputs are of the correct sizes.
     """
     assert (str(type(X)) in ["<class 'numpy.ndarray'>"]
-            and np.shape(X)==(4,)), "Error with the type and shape of X ["+ fnState_And_Control_Transition_Matrices.__name__+"()]."
+            and np.shape(X)==(4,)), "Error with the type and shape of X ["+ return_Phi.__name__+"()]."
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
@@ -77,7 +77,7 @@ def return_B(X,U,dt):
     [ ] - Create tests to make sure that the outputs are of the correct sizes.
     """
     assert (str(type(X)) in ["<class 'numpy.ndarray'>"]
-            and np.shape(X)==(4,)), "Error with the type and shape of X ["+ fnState_And_Control_Transition_Matrices.__name__+"()]."
+            and np.shape(X)==(4,)), "Error with the type and shape of X ["+ return_B.__name__+"()]."
     assert str(type(U)) in ["<class 'int'>",
             "<class 'float'>",
             "<class 'numpy.float'>",
