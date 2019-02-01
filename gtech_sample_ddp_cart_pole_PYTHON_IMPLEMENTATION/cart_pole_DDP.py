@@ -198,14 +198,18 @@ def cart_pole_DDP(X_o,**params):
             #     + Phi[j].T * Vxx[j+1] * B[j]
             #     + 0.1*np.matrix(np.tensordot(Fxu[j],Vx[j+1],axes=1)).T
             # )
+            # Qxu[j] = (
+            #     lxu[j]
+            #     + Phi[j].T * Vxx[j+1] * B[j]
+            #     + np.matrix(
+            #         sum([
+            #                 Vx[j+1][i,0]*Fxu[j][:,:,i] for i in range(4)
+            #         ])
+            #     )
+            # )
             Qxu[j] = (
                 lxu[j]
                 + Phi[j].T * Vxx[j+1] * B[j]
-                + np.matrix(
-                    sum([
-                            Vx[j+1][i,0]*Fxu[j][:,:,i] for i in range(4)
-                    ])
-                )
             )
             Qux[j] = Qxu[j].T
             # Quu[j] = (
@@ -213,28 +217,36 @@ def cart_pole_DDP(X_o,**params):
             #     + B[j].T * Vxx[j+1] * B[j]
             #     + 0.1*np.matrix(np.tensordot(Fuu[j],Vx[j+1],axes=1))
             # )
+            # Quu[j] = (
+            #     luu[j]
+            #     + B[j].T * Vxx[j+1] * B[j]
+            #     + np.matrix(
+            #         sum([
+            #             Vx[j+1][i,0]*Fuu[j][:,:,i] for i in range(4)
+            #         ])
+            #     )
+            # )
             Quu[j] = (
                 luu[j]
                 + B[j].T * Vxx[j+1] * B[j]
-                + np.matrix(
-                    sum([
-                        Vx[j+1][i,0]*Fuu[j][:,:,i] for i in range(4)
-                    ])
-                )
             )
             # Qxx[j] = (
             #     lxx[j]
             #     + Phi[j].T * Vxx[j+1] * Phi[j]
             #     + 0.1*np.matrix(np.tensordot(Fxx[j],Vx[j+1],axes=1))
             # )
+            # Qxx[j] = (
+            #     lxx[j]
+            #     + Phi[j].T * Vxx[j+1] * Phi[j]
+            #     + np.matrix(
+            #         sum([
+            #             Vx[j+1][i,0]*Fxx[j][:,:,i] for i in range(4)
+            #         ])
+            #     )
+            # )
             Qxx[j] = (
                 lxx[j]
                 + Phi[j].T * Vxx[j+1] * Phi[j]
-                + np.matrix(
-                    sum([
-                        Vx[j+1][i,0]*Fxx[j][:,:,i] for i in range(4)
-                    ])
-                )
             )
 
             Quu_inv[j] = Quu[j]**(-1)
