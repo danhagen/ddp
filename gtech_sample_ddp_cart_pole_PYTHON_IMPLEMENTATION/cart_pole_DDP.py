@@ -14,6 +14,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+import matplotlib.animation as animation
+import matplotlib.patches as patches
 from params import *
 from quadratic_cost_function_expansion_variables import *
 from quadratic_dynamics_expansion import *
@@ -21,6 +24,8 @@ from linearized_dynamics import *
 from feedforward_simulation import *
 from cost_function import *
 from animate import *
+from plot import *
+from danpy.sb import dsb
 import time
 
 class Cart_Pole_DDP:
@@ -173,6 +178,12 @@ class Cart_Pole_DDP:
         else:
             assert np.shape(self.U_o)==(self.Horizon-1,), "U_o must be of shape ("+str(self.Horizon-1)+",) not "+str(np.shape(self.U_o))+"."
             self.U = self.U_o
+    def set_X_o(self,X_o):
+        """
+        X_o - Initial states of the system. Must be of shape (4,).
+        """
+        self.X_o = X_o
+        assert np.shape(self.X_o)==(4,), "X_o must have shape (4,) not "+str(np.shape(self.X_o))+"."
     def set_p_target(self,p_target):
         """
         p_target - Target state for the system to reach. Must be a (4,1) numpy matrix. Default is numpy.matrix([[0,0,0,0]]).T.
@@ -216,34 +227,6 @@ class Cart_Pole_DDP:
                 and (self.R>0)), \
             "R must be an int, float, float32, float64, or numpy.float not "+str(type(self.R))+", and should be greater than 0. Default is 0.001."
 
-    def F1(self,x,u):
-        return(x[2])
-    def F2(self,x,u):
-        return(x[3])
-    def F3(self,x,u):
-        return(
-            (
-                m2*L*sin(x[1])*(x[3]**2)
-                - b1*x[2]
-                - m2*gr*sin(2*x[1])/2
-                + b2*cos(x[1])*x[3]/L
-                + u
-            )
-            /
-            (m1 + m2*(sin(x[1])**2))
-        )
-    def F4(self,x,u):
-        return(
-            (
-                -m2*sin(2*x[1])*(x[3]**2)/2
-                + b1*cos(x[1])*x[2]/L
-                + (m1+m2)*gr*sin(x[1])/L
-                - (m1+m2)*b2*x[3]/(m2*(L**2))
-                - cos(x[1])*u/L
-            )
-            /
-            (m1 + m2*(sin(x[1])**2))
-        )
     def forward_integrate_dynamics(self):
         """
         ICs must be a list of floats and/or ints of length 4. If ReturnX is True, the this will return an array of shape (4,len(Time)).
@@ -279,10 +262,10 @@ class Cart_Pole_DDP:
         self.X[3,0] = self.X_o[3]
 
         for i in range(self.Horizon-1):
-            self.X[0,i+1] = self.X[0,i] + self.F1(self.X[:,i],self.U[i])*dt
-            self.X[1,i+1] = self.X[1,i] + self.F2(self.X[:,i],self.U[i])*dt
-            self.X[2,i+1] = self.X[2,i] + self.F3(self.X[:,i],self.U[i])*dt
-            self.X[3,i+1] = self.X[3,i] + self.F4(self.X[:,i],self.U[i])*dt
+            self.X[0,i+1] = self.X[0,i] + F1(self.X[:,i],self.U[i])*self.dt
+            self.X[1,i+1] = self.X[1,i] + F2(self.X[:,i],self.U[i])*self.dt
+            self.X[2,i+1] = self.X[2,i] + F3(self.X[:,i],self.U[i])*self.dt
+            self.X[3,i+1] = self.X[3,i] + F4(self.X[:,i],self.U[i])*self.dt
 
     def return_Phi(self,x,u):
         """
@@ -318,15 +301,15 @@ class Cart_Pole_DDP:
 
         dFx = np.zeros((4,4))
 
-        # dFx[0,0] = 0 # dF1/dx1⋅dx1 = (F1(x,u)-F1(x-h1,u))/h = 0
-        # dFx[0,1] = 0 # dF1/dx2⋅dx2 = (F1(x,u)-F1(x-h2,u))/h = 0
-        dFx[0,2] = 1 # dF1/dx3⋅dx3 = (F1(x,u)-F1(x-h3,u))/h = 1
-        # dFx[0,3] = 0 # dF1/dx4⋅dx4 = (F1(x,u)-F1(x-h4,u))/h = 0
+        # dFx[0,0] = 0 # dF1/dx1⋅dx1 = (self.F1(x,u)-self.F1(x-h1,u))/h = 0
+        # dFx[0,1] = 0 # dF1/dx2⋅dx2 = (self.F1(x,u)-self.F1(x-h2,u))/h = 0
+        dFx[0,2] = 1 # dF1/dx3⋅dx3 = (self.F1(x,u)-self.F1(x-h3,u))/h = 1
+        # dFx[0,3] = 0 # dF1/dx4⋅dx4 = (self.F1(x,u)-self.F1(x-h4,u))/h = 0
 
-        # dFx[1,0] = 0 # dF2/dx1⋅dx2 = (F2(x,u)-F2(x-h1,u))/h = 0
-        # dFx[1,1] = 0 # dF2/dx2⋅dx2 = (F2(x,u)-F2(x-h2,u))/h = 0
-        # dFx[1,2] = 0 # dF2/dx3⋅dx2 = (F2(x,u)-F2(x-h3,u))/h = 1
-        dFx[1,3] = 1 # dF2/dx4⋅dx2 = (F2(x,u)-F2(x-h4,u))/h = 0
+        # dFx[1,0] = 0 # dF2/dx1⋅dx2 = (self.F2(x,u)-self.F2(x-h1,u))/h = 0
+        # dFx[1,1] = 0 # dF2/dx2⋅dx2 = (self.F2(x,u)-self.F2(x-h2,u))/h = 0
+        # dFx[1,2] = 0 # dF2/dx3⋅dx2 = (self.F2(x,u)-self.F2(x-h3,u))/h = 1
+        dFx[1,3] = 1 # dF2/dx4⋅dx2 = (self.F2(x,u)-self.F2(x-h4,u))/h = 0
 
         # F3 is the acceleration of the cart.
         dFx[2,0] = (F3(x,u)-F3(x-h1,u))/h
@@ -413,7 +396,7 @@ class Cart_Pole_DDP:
         """
         Phi = list(
                 map(
-                    lambda x,u: return_Phi(x,u,self.dt),
+                    lambda x,u: self.return_Phi(x,u),
                     self.X[:,:-1].T,
                     self.U
                 )
@@ -421,12 +404,81 @@ class Cart_Pole_DDP:
 
         B = list(
                 map(
-                    lambda x,u: return_B(x,u,self.dt),
+                    lambda x,u: self.return_B(x,u),
                     self.X[:,:-1].T,
                     self.U
                 )
             )
         return(Phi,B)
+
+    def return_quadratic_cost_function_expansion_variables(self):
+        """
+        Takes in the input U and the the corresponding output X, as well as dt and returns lists that contain the coefficient matrices for the quadratic expansion of the cost function (l(x,u)) for each timestep for range(len(Time)-1).
+        """
+        # returns a list of length len(Time)-1, each element with shape (1,1), where n is the number of states.
+        l = list(
+                map(
+                    lambda x,u: u.T * self.R * u * self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        # returns a list of length len(Time)-1, each element with shape (n,1), where n is the number of states.
+        lx = list(
+                map(
+                    lambda x,u: np.matrix(np.zeros((4,1)))*self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        # returns a list of length len(Time)-1, each element with shape (m,1), where n is the number of states.
+        lu = list(
+                map(
+                    lambda x,u: self.R * u * self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        # returns a list of length len(Time)-1, each element with shape (m,n), where m is the number of inputs and n is the number of states.
+        lux = list(
+                map(
+                    lambda x,u: np.matrix(np.zeros((1,4)))*self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        # returns a list of length len(Time)-1, each element with shape (n,m), where n is the number of states and m is the number of inputs.
+        lxu = list(
+                map(
+                    lambda x,u: np.matrix(np.zeros((4,1)))*self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        # returns a list of length len(Time)-1, each element with shape (m,m), where m is the number of inputs.
+        luu = list(
+                map(
+                    lambda x,u: self.R*self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        # returns a list of length len(Time)-1, each element with shape (n,n), where n is the number of states.
+        lxx = list(
+                map(
+                    lambda x,u: np.matrix(np.zeros((4,4)))*self.dt,
+                    self.X[:,1:].T,
+                    self.U
+                )
+            )
+
+        return(l,lx,lu,lux,lxu,luu,lxx)
 
     def return_cost_for_a_given_trial(self):
         """
@@ -435,7 +487,7 @@ class Cart_Pole_DDP:
 
         RunningCost = 0
         for j in range(self.Horizon-1):
-            RunningCost = RunningCost + 0.5 * self.U[j].T * self.R * self.U[j] * dt
+            RunningCost = RunningCost + 0.5 * self.U[j].T * self.R * self.U[j] * self.dt
 
         TerminalCost = (
             (np.matrix(self.X[:,self.Horizon-1]).T - self.p_target).T
@@ -459,7 +511,7 @@ class Cart_Pole_DDP:
         dU = np.zeros((self.Horizon-1,))
 
         # Initial trajectory:
-        assert np.shape(X_o)==(4,), "X_o must have shape (4,) not "+str(np.shape(X_o))+"."
+        assert np.shape(self.X_o)==(4,), "X_o must have shape (4,) not "+str(np.shape(self.X_o))+"."
         self.X = np.zeros((4,self.Horizon))
         self.forward_integrate_dynamics()
 
@@ -484,9 +536,8 @@ class Cart_Pole_DDP:
             #> Quadratic Approximations of the cost function >
             #------------------------------------------------>
 
-            Phi,B = self.return_linearized_dynamics_matrices(X,U,dt)
-            \\\\\\ NEED TO MAKE THIS AN INTERNAL FUNCTION.
-            l,lx,lu,lux,lxu,luu,lxx = return_quadratic_cost_function_expansion_variables(X,U,R,dt)
+            Phi,B = self.return_linearized_dynamics_matrices()
+            l,lx,lu,lux,lxu,luu,lxx = self.return_quadratic_cost_function_expansion_variables()
 
             #------------------------------------------------>
             #--------------> Find the controls -------------->
@@ -537,7 +588,7 @@ class Cart_Pole_DDP:
             for i in range(self.Horizon-1):
                 dU = -Quu_inv[j]*(Qu[i] + Qux[i]*dX)
                 dX = Phi[i]*dX + B[i]*dU
-                U_new[i] = U[i] + LearningRate*dU
+                U_new[i] = self.U[i] + self.LearningRate*dU
 
             self.U = U_new
 
@@ -549,13 +600,16 @@ class Cart_Pole_DDP:
 
             self.TotalCost[k] =  self.return_cost_for_a_given_trial()
 
-            print(
-                'DDP Iteration %d,  Current Cost = %f \n'
-                % (k+1,self.TotalCost[k])
-            )
-    def plot_trajectory(self):
+            # print(
+            #     'DDP Iteration %d,  Current Cost = %f \n'
+            #     % (k+1,self.TotalCost[k])
+            # )
+    def return_time_array(self):
         Endtime = self.Horizon*self.dt
         Time = np.arange(0,Endtime,self.dt)
+        return(Time)
+    def plot_trajectory(self):
+        Time = self.return_time_array()
 
         fig1 = plt.figure(figsize=(12,8))
         plt.suptitle("Cart Pole Control via DDP",fontsize=16)
@@ -613,10 +667,8 @@ class Cart_Pole_DDP:
         plt.xlabel('Iterations',fontsize=16)
         plt.ylabel('Cost',fontsize=16)
         plt.show()
-
     def animate_trajectory(self,**kwargs):
-        Endtime = self.Horizon*self.dt
-        Time = np.arange(0,Endtime,self.dt)
+        Time = self.return_time_array()
 
         SaveAsGif = kwargs.get("SaveAsGif",False)
         assert type(SaveAsGif)==bool, "SaveAsGif must be either True or False (Default)."
@@ -648,9 +700,9 @@ class Cart_Pole_DDP:
         # Model Drawing
         marker_interdistance = 25
         lowest_marker = marker_interdistance* \
-                (int(np.floor(X[0].min())/marker_interdistance)-1)
+                (int(np.floor(self.X[0].min())/marker_interdistance)-1)
         highest_marker = marker_interdistance* \
-                (int(np.ceil(X[0].max())/marker_interdistance)+2)
+                (int(np.ceil(self.X[0].max())/marker_interdistance)+2)
         markers = np.arange(
                 lowest_marker,
                 highest_marker,
@@ -1082,6 +1134,7 @@ class Cart_Pole_DDP:
                 "Qxx" : Qxx
             }
         )
+
 def cart_pole_DDP(X_o,**params):
     """
     Takes in the initial position (X_o) of the system along with an optional set of parameters (params), and runs DDP to meet some desired state.
@@ -1111,6 +1164,8 @@ def cart_pole_DDP(X_o,**params):
     10) AnimateResults - Boolean to determine if the results of the program will be animated. Default is False.
 
     11) ReturnAllResults - Boolean to determine if all results should be returned. Default is False. (NOTE: If False, the system will only return the values for the last iteration (X,U).)
+
+    12) thresh - The cost threshold when the programmer will stop looking for a better solution . Must be a positive number (Default is 5).
 
 
     """
@@ -1192,6 +1247,15 @@ def cart_pole_DDP(X_o,**params):
     ReturnAllResults = params.get("ReturnAllResults",False)
     assert type(ReturnAllResults)==bool, "ReturnAllResults must be either True or False (Default)."
 
+    # thresh - Cost Threshold (must be a positive number)
+    thresh = params.get("thresh",5)
+    assert str(type(thresh)) in [
+            "<class 'int'>",
+            "<class 'float'>",
+            "<class 'float32'>",
+            "<class 'float64'>",
+            "<class 'numpy.float'>"] and thresh > 0, \
+        "thresh must be an int, float, float32, float64, or numpy.float not "+str(type(thresh))+" and must be positive. Default is 5."
     #------------------------------------------------>
     #-----------> Initializing the Problem ---------->
     #------------------------------------------------>
@@ -1224,7 +1288,8 @@ def cart_pole_DDP(X_o,**params):
 
     TotalCost = [None]*NumberOfIterations
 
-    StartTime = time.time()
+    # StartTime = time.time()
+    statusbar = dsb(0,NumberOfIterations,title="Cart-Pole (DDP)")
     for k in range(NumberOfIterations):
         #------------------------------------------------>
         #--------> Linearization of the dynamics -------->
@@ -1304,12 +1369,16 @@ def cart_pole_DDP(X_o,**params):
                 R
             )
 
-        print(
-            'DDP Iteration %d,  Current Cost = %f \n'
-            % (k+1,TotalCost[k])
-        )
-
-    print("Total Run Time: " + '%.2f'%(time.time()-StartTime) + "s")
+        if TotalCost[k]<thresh:
+            statusbar.update(NumberOfIterations)
+        else:
+            statusbar.update(k)
+    #     print(
+    #         'DDP Iteration %d,  Current Cost = %f \n'
+    #         % (k+1,TotalCost[k])
+    #     )
+    #
+    # print("Total Run Time: " + '%.2f'%(time.time()-StartTime) + "s")
     Endtime = Horizon*dt
     Time = np.arange(0,Endtime,dt)
 
@@ -1318,61 +1387,7 @@ def cart_pole_DDP(X_o,**params):
     #------------------------------------------------------->
 
     if PlotResults == True:
-        fig1 = plt.figure(figsize=(12,8))
-        plt.suptitle("Cart Pole Control via DDP",fontsize=16)
-
-        plt.subplot(321)
-        plt.plot(
-            Time,
-            p_target[0,0]*np.ones((Horizon,)),
-            'r--',
-            linewidth=2
-        )
-        plt.plot(Time,X[0,:],linewidth=4)
-        # plt.xlabel('Time (s)',fontsize=16)
-        plt.ylabel('X Position',fontsize=16)
-        plt.grid(True)
-
-        plt.subplot(322)
-        plt.plot(
-            Time,
-            p_target[1,0]*np.ones((Horizon,)),
-            'r--',
-            linewidth=2
-        )
-        plt.plot(Time,X[1,:],linewidth=4)
-        # plt.xlabel('Time (s)',fontsize=16)
-        plt.ylabel('Theta',fontsize=16)
-        plt.grid(True)
-
-        plt.subplot(323)
-        plt.plot(
-            Time,
-            p_target[2,0]*np.ones((Horizon,)),
-            'r--',
-            linewidth=4
-        )
-        plt.plot(Time,X[2,:],linewidth=4)
-        # plt.xlabel('Time (s)',fontsize=16)
-        plt.ylabel('X velocity',fontsize=16)
-        plt.grid(True)
-
-        plt.subplot(324)
-        plt.plot(
-            Time,
-            p_target[3,0]*np.ones((Horizon,)),
-            'r--',
-            linewidth=4
-        )
-        plt.plot(Time,X[3,:],linewidth=4)
-        # plt.xlabel('Time (s)',fontsize=16)
-        plt.ylabel('Angular Velocity',fontsize=16)
-        plt.grid(True)
-
-        plt.subplot(3,2,(5,6))
-        plt.plot(TotalCost,linewidth=2)
-        plt.xlabel('Iterations',fontsize=16)
-        plt.ylabel('Cost',fontsize=16)
+        plot_trajectory(Time,X,TotalCost,**params)
 
     #------------------------------------------------------->
     #------------------> Animate Results ------------------->

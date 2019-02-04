@@ -54,11 +54,13 @@ def forward_integrate_dynamics(ICs,U=None,**kwargs):
     assert type(PlotStates)==bool, "PlotStates must be either True or False (Default)."
 
     Time = np.arange(0,Horizon*dt,dt)
-    X = np.zeros((4,len(Time)))
+    X = np.zeros((4,Horizon))
     if U is None:
-        U = np.zeros(len(Time)-1)
+        U = np.zeros(Horizon-1)
     else:
-        assert len(U)==len(Time)-1, "U must have length = (len(Time)-1)."
+        assert len(U)==Horizon-1, "U must have length = (Horizon-1)."
+        # if not (len(U)==len(Time)-1):
+        #     import ipdb; ipdb.set_trace()
 
     # ICs
 
@@ -73,7 +75,7 @@ def forward_integrate_dynamics(ICs,U=None,**kwargs):
         X[2,0] = ICs[2]
         X[3,0] = ICs[3]
 
-    for i in range(len(Time)-1):
+    for i in range(Horizon-1):
         X[0,i+1] = X[0,i] + F1(X[:,i],U[i])*dt
         X[1,i+1] = X[1,i] + F2(X[:,i],U[i])*dt
         X[2,i+1] = X[2,i] + F3(X[:,i],U[i])*dt

@@ -20,6 +20,7 @@ params = {
     "PlotResults" : True,
     "AnimateResults" : True,
     "ReturnAllResults" : True,
+    "NumberOfIterations" : 100
 }
 
 # h is the step used to determine the derivative
