@@ -32,7 +32,6 @@ X = np.zeros((4,params["Horizon"]))
 U = np.zeros((params["Horizon"]-1,))
 TotalCost = np.zeros((params["Horizon"]-1,))
 
-params = params
 params["NumberOfIterations"] = NumberOfIterations
 # params["p_target"] = np.matrix([[5,0,0,0]]).T
 
