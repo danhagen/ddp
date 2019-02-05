@@ -586,7 +586,7 @@ class Cart_Pole_DDP:
             U_new = np.zeros((self.Horizon-1,))
             dX = np.matrix(np.zeros((4,1)))
             for i in range(self.Horizon-1):
-                dU = -Quu_inv[j]*(Qu[i] + Qux[i]*dX)
+                dU = -Quu_inv[i]*(Qu[i] + Qux[i]*dX)
                 dX = Phi[i]*dX + B[i]*dU
                 U_new[i] = self.U[i] + self.LearningRate*dU
 
@@ -604,6 +604,122 @@ class Cart_Pole_DDP:
             #     'DDP Iteration %d,  Current Cost = %f \n'
             #     % (k+1,self.TotalCost[k])
             # )
+    def run_ddp_for_mpc(self):
+        #------------------------------------------------>
+        #-----------> Initializing the Problem ---------->
+        #------------------------------------------------>
+
+        # TotalX and TotalU
+        TotalX = []
+        TotalU = []
+
+        # Correction array for input, not derivative of input.
+        dU = np.zeros((self.Horizon-1,))
+
+        # Initial trajectory:
+        assert np.shape(self.X_o)==(4,), "X_o must have shape (4,) not "+str(np.shape(self.X_o))+"."
+        self.X = np.zeros((4,self.Horizon))
+        self.forward_integrate_dynamics()
+
+        V = [None]*self.Horizon # Each element must be a (4,1) matrix.
+        Vx = [None]*self.Horizon # Each element must be a (4,1) matrix.
+        Vxx = [None]*self.Horizon # Each element must be a (4,4) matrix.
+
+        Qu = [None]*self.Horizon # Each element must be a (1,1) matrix.
+        Qx = [None]*self.Horizon # Each element must be a (4,1) matrix.
+        Qux = [None]*self.Horizon # Each element must be a (1,4) matrix.
+        Qxu = [None]*self.Horizon # Each element must be a (4,1) matrix.
+        Quu = [None]*self.Horizon # Each element must be a (1,1) matrix.
+        Quu_inv = [None]*self.Horizon # Each element must be a (1,1) matrix.
+        Qxx = [None]*self.Horizon # Each element must be a (4,4) matrix.
+
+        self.TotalCost = [None]*self.NumberOfIterations
+
+        StartTime = time.time()
+        for k in range(self.NumberOfIterations):
+            #------------------------------------------------>
+            #--------> Linearization of the dynamics -------->
+            #> Quadratic Approximations of the cost function >
+            #------------------------------------------------>
+
+            Phi,B = self.return_linearized_dynamics_matrices()
+            l,lx,lu,lux,lxu,luu,lxx = self.return_quadratic_cost_function_expansion_variables()
+
+            #------------------------------------------------>
+            #--------------> Find the controls -------------->
+            #------------------------------------------------>
+
+            Vxx[self.Horizon-1]= self.Q_f
+            Vx[self.Horizon-1] = self.Q_f * (np.matrix(self.X[:,self.Horizon-1]).T - self.p_target)
+            V[self.Horizon-1] = (
+                (np.matrix(self.X[:,self.Horizon-1]).T - self.p_target).T
+                * self.Q_f
+                * (np.matrix(self.X[:,self.Horizon-1]).T - self.p_target)
+            )
+
+            #------------------------------------------------>
+            #----> Backpropagation of the Value Function ---->
+            #------------------------------------------------>
+
+            for j in reversed(range(self.Horizon-1)):
+                Qx[j] = lx[j] + Phi[j].T * Vx[j+1]
+                Qu[j] = lu[j] +  B[j].T * Vx[j+1]
+                Qxu[j] = (
+                    lxu[j]
+                    + Phi[j].T * Vxx[j+1] * B[j]
+                )
+                Qux[j] = Qxu[j].T
+                Quu[j] = (
+                    luu[j]
+                    + B[j].T * Vxx[j+1] * B[j]
+                )
+                Qxx[j] = (
+                    lxx[j]
+                    + Phi[j].T * Vxx[j+1] * Phi[j]
+                )
+
+                Quu_inv[j] = Quu[j]**(-1)
+
+                Vxx[j] = Qxx[j] - Qxu[j] * Quu_inv[j] * Qux[j]
+                Vx[j]= Qx[j] - Qxu[j] * Quu_inv[j] * Qu[j]
+                # V[j] = l[j] + V[j+1] - 0.5 * Qu[j].T * Quu_inv[j] * Qu[j]
+                V[j] = V[j+1] - 0.5*Qu[j].T * Quu_inv[j] * Qu[j]
+
+            #------------------------------------------------>
+            #-------------> Find the controlls -------------->
+            #------------------------------------------------>
+            if k==self.NumberOfIterations-1:
+                dX = np.matrix(np.zeros((4,1)))
+                dU = -Quu_inv[0]*(Qu[0] + Qux[0]*dX)
+                self.U = (self.U[0] + self.LearningRate*dU)*np.ones((self.Horizon-1,))
+                self.next_X = np.zeros((4,1))
+                self.next_X[0,0] = self.X_o[0] + F1(self.X_o,self.U[0])*self.dt
+                self.next_X[1,0] = self.X_o[1] + F2(self.X_o,self.U[0])*self.dt
+                self.next_X[2,0] = self.X_o[2] + F3(self.X_o,self.U[0])*self.dt
+                self.next_X[3,0] = self.X_o[3] + F4(self.X_o,self.U[0])*self.dt
+            else:
+                U_new = np.zeros((self.Horizon-1,))
+                dX = np.matrix(np.zeros((4,1)))
+                for i in range(self.Horizon-1):
+                    dU = -Quu_inv[i]*(Qu[i] + Qux[i]*dX)
+                    dX = Phi[i]*dX + B[i]*dU
+                    U_new[i] = self.U[i] + self.LearningRate*dU
+
+                self.U = U_new
+
+                #------------------------------------------------>
+                #-----> Simulation of the Nonlinear System ------>
+                #------------------------------------------------>
+
+                self.forward_integrate_dynamics()
+
+                self.TotalCost[k] =  self.return_cost_for_a_given_trial()
+
+                # print(
+                #     'DDP Iteration %d,  Current Cost = %f \n'
+                #     % (k+1,self.TotalCost[k])
+                # )
+
     def return_time_array(self):
         Endtime = self.Horizon*self.dt
         Time = np.arange(0,Endtime,self.dt)
