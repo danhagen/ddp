@@ -293,7 +293,7 @@ def animate_trajectory(Time,X,U,**kwargs):
 
         Pendulum_Rivet.set_xdata([X[0,0]])
 
-        TimeStamp.set_text("Time: "+str(Time[i])+" s")
+        TimeStamp.set_text("Time: "+"{:.2f}".format(Time[i])+" s",)
 
         Input.set_xdata(Time[:i])
         Input.set_ydata(U[:i])
@@ -392,7 +392,7 @@ def animate_trajectory(Time,X,U,**kwargs):
         TimeStamp = ax0.text(
             0.75*MaximumX,
             0.75*1.50*(Cart_Height/2+Pendulum_Width/2+Pendulum_Length+Pendulum_Width/2),
-            "Time: "+str(Time[0])+" s",
+            "Time: "+"{:.2f}".format(Time[0])+" s",
             color='0.50',
             fontsize=16
         )

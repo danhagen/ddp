@@ -46,7 +46,7 @@ X[:,0] = X_o
 Endtime = params["Horizon"]*params["dt"]
 Time = np.arange(0,Endtime,params["dt"])
 
-thresh1 = 5
+thresh1 = 1
 
 statusbar = dsb(0,AbsoluteHorizon-1,title="Cart-Pole Inversion (MPC)")
 ## --> Initialize DDP from initial state (X_o) with Horizon = Horizon and U_o = np.zeros((Horizon,))
