@@ -445,7 +445,7 @@ def animate_trajectory(Time,X,U,**kwargs):
     elif dt <= 0.01:
         framestep=10
     else:
-        framestep=1
+        framestep=5
     ani = animation.FuncAnimation(fig, animate, frames=np.arange(0,len(Time)-1,framestep),init_func=init, blit=False)
     if SaveAsGif==True:
         ani.save("visualizations_cart_pendulum/"+FileName+'.gif', writer='imagemagick', fps=10)
