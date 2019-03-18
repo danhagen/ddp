@@ -11,8 +11,8 @@ def plot_trajectory(Time,X,TotalCost,**params):
 
     plt.subplot(321)
     plt.plot(
-        Time,
-        p_target[0,0]*np.ones((Horizon,)),
+        [Time[0],Time[-1]],
+        [p_target[0,0]]*2,
         'r--',
         linewidth=2
     )
@@ -23,8 +23,8 @@ def plot_trajectory(Time,X,TotalCost,**params):
 
     plt.subplot(322)
     plt.plot(
-        Time,
-        p_target[1,0]*np.ones((Horizon,)),
+        [Time[0],Time[-1]],
+        [p_target[1,0]]*2,
         'r--',
         linewidth=2
     )
@@ -35,8 +35,8 @@ def plot_trajectory(Time,X,TotalCost,**params):
 
     plt.subplot(323)
     plt.plot(
-        Time,
-        p_target[2,0]*np.ones((Horizon,)),
+        [Time[0],Time[-1]],
+        [p_target[2,0]]*2,
         'r--',
         linewidth=4
     )
@@ -47,8 +47,8 @@ def plot_trajectory(Time,X,TotalCost,**params):
 
     plt.subplot(324)
     plt.plot(
-        Time,
-        p_target[3,0]*np.ones((Horizon,)),
+        [Time[0],Time[-1]],
+        [p_target[3,0]]*2,
         'r--',
         linewidth=4
     )
