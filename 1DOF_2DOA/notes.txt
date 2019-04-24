@@ -1,0 +1,1 @@
+ - [2019/04/23] Both the torque driven and the tension driven MPCs will work ONLY IF the horizon is considerably small (0.2 sec for a 5 second simulation). Still need to create constraints that make tension values only positive (RESEARCH: How to constrain the input to MPC/DDP). 
