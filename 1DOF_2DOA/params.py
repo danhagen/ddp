@@ -1,4 +1,5 @@
 import numpy as np
+from physiology.muscle_params_BIC_TRI import *
 
 # params dictionary
 
@@ -21,6 +22,10 @@ params = {
                 [-1e-3,2e-3]
             ]
         ),
+    "InputBounds" : [
+            [0,F_MAX1],
+            [0,F_MAX2]
+        ],
     "PlotResults" : True,
     "AnimateResults" : True,
     "ReturnAllResults" : True,
