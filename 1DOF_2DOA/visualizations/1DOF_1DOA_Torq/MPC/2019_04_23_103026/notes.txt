@@ -1,0 +1,29 @@
+[Create 2019/04/23 at 10:30.26]
+
+##############################
+########### Notes ############
+##############################
+
+		NONE
+
+##############################
+######### Parameters #########
+##############################
+
+		Horizon: 20
+		SimulationDuration: 10
+		dt: 0.01
+		U_o: [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+		p_target: [[0.78539816]
+ [0.        ]]
+		LearningRate: 0.2
+		Q_f: [[500   0]
+ [  0  50]]
+		R: 0.001
+		PlotResults: True
+		AnimateResults: True
+		ReturnAllResults: True
+		NumberOfIterations: 1
+		Time Duration: 5
+
+##############################

@@ -4,6 +4,7 @@ import numpy as np
 
 params = {
     "Horizon" : 300,
+    "SimulationDuration" : 10,
     "dt" : 0.01,
     "U_o" : None,
     "p_target" : np.matrix([[0,0,0,0]]).T,
@@ -20,6 +21,7 @@ params = {
     "PlotResults" : True,
     "AnimateResults" : True,
     "ReturnAllResults" : True,
+    "NumberOfIterations" : 100
 }
 
 # h is the step used to determine the derivative
