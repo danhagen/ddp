@@ -52,11 +52,13 @@ class DDP_1DOF_2DOA:
 
         8) R - Running cost matrix (only one input). Must be a (2,2) numpy matrix. Default is 0.001*numpy.matrix(numpy.eye(2)). Each element should be positive.
 
-        9) PlotResults - Boolean to determine if the results of the program will be plotted. Default is False.
+        9) InputBounds - Bounds for input to be used for quadratic penalty function. Must be a list of shape (2,2). Default is [[0,1000],[0,1000]]. Note that each row must be in ascending order and all elements must be greater than or equal to zero.
 
-        10) AnimateResults - Boolean to determine if the results of the program will be animated. Default is False.
+        10) PlotResults - Boolean to determine if the results of the program will be plotted. Default is False.
 
-        11) ReturnAllResults - Boolean to determine if all results should be returned. Default is False. (NOTE: If False, the system will only return the values for the last iteration (X,U).)
+        11) AnimateResults - Boolean to determine if the results of the program will be animated. Default is False.
+
+        12) ReturnAllResults - Boolean to determine if all results should be returned. Default is False. (NOTE: If False, the system will only return the values for the last iteration (X,U).)
 
 
         """
@@ -120,6 +122,28 @@ class DDP_1DOF_2DOA:
         assert (str(type(self.R))=="<class 'numpy.matrixlib.defmatrix.matrix'>"
                 and np.shape(self.R)==(2,2)), \
             "R must be a (2,2) numpy matrix. Default is [[1e-3,0],[0,1e-3]]."
+
+        # InputBounds - Bounds for inputs.
+        self.InputBounds = params.get("InputBounds",[[0,1000],[0,1000]])
+        assert (type(self.InputBounds)==list
+                and np.shape(self.InputBounds)==(2,2)), \
+            "InputBounds must be a (2,2) list. Default is [[0,1000],[0,1000]]."
+        for i in range(2):
+            assert (all([el>=0 for el in self.InputBounds[i][:]])
+                    and self.InputBounds[i][0]<self.InputBounds[i][1]), \
+                "Each element in InputBounds should be positive and each row should be in ascending order. Check the " + str(i+1) + "-th row"
+
+        # ConstraintCoefficient - Coefficient for quadratic penalty function.
+        self.ConstraintCoefficient = params.get("ConstraintCoefficient",0)
+        assert str(type(self.ConstraintCoefficient)) in [
+                "<class 'int'>",
+                "<class 'float'>",
+                "<class 'float32'>",
+                "<class 'float64'>",
+                "<class 'numpy.float'>"], \
+            "ConstraintCoefficient must be an int, float, float32, float64, or numpy.float not "+str(type(self.ConstraintCoefficient))+". Default is 0."
+        assert self.ConstraintCoefficient>=0, \
+            "ConstraintCoefficient must positive or zero (Currently  "+str(type(self.ConstraintCoefficient))+"). Default is 0."
 
         self.X_o = X_o
         assert np.shape(self.X_o)==(2,), "X_o must have shape (2,) not "+str(np.shape(self.X_o))+"."
@@ -215,6 +239,33 @@ class DDP_1DOF_2DOA:
         assert (str(type(self.R))=="<class 'numpy.matrixlib.defmatrix.matrix'>"
                 and np.shape(self.R)==(2,2)), \
             "R must be a (2,2) numpy matrix. Default is 0.001*numpy.matrix(numpy.eye(2))."
+    def set_InputBounds(self,InputBounds):
+        """
+        InputBounds - Bounds for the inputs. Must be a (2,2) list. Default is [[0,1000],[0,1000]]. Each element should be positive and each row should be in ascending order.
+        """
+        self.InputBounds = InputBounds
+        assert (type(self.InputBounds)==list
+                and np.shape(self.InputBounds)==(2,2)), \
+            "InputBounds must be a (2,2) list. Default is [[0,1000],[0,1000]]."
+        for i in range(2):
+            assert (all([el>=0 for el in self.InputBounds[i][:]])
+                    and self.InputBounds[i][0]<self.InputBounds[i][1]), \
+                "Each element in InputBounds should be positive and each row should be in ascending order. Check the " + str(i+1) + "-th row"
+    def set_ConstraintCoefficient(self,ConstraintCoefficient):
+        """
+        ConstraintCoefficient - Coefficient for quadratic penalty function. Must be either an int, float, float32, float64, or numpy.float and must be positive. Default is 0.
+        #  -
+        """
+        self.ConstraintCoefficient = ConstraintCoefficient
+        assert str(type(self.ConstraintCoefficient)) in [
+                "<class 'int'>",
+                "<class 'float'>",
+                "<class 'float32'>",
+                "<class 'float64'>",
+                "<class 'numpy.float'>"], \
+            "ConstraintCoefficient must be an int, float, float32, float64, or numpy.float not "+str(type(self.ConstraintCoefficient))+". Default is 0."
+        assert self.ConstraintCoefficient>=0, \
+            "ConstraintCoefficient must positive or zero (Currently  "+str(type(self.ConstraintCoefficient))+"). Default is 0."
 
     def forward_integrate_dynamics(self):
         """
@@ -373,7 +424,24 @@ class DDP_1DOF_2DOA:
         # returns a list of length len(Time)-1, each element with shape (1,1), where n is the number of states.
         l = list(
                 map(
-                    lambda x,u: u[:,np.newaxis].T * self.R * u[:,np.newaxis] * self.dt,
+                    lambda x,u: (
+                        0.5 * u[:,np.newaxis].T
+                            * self.R
+                            * u[:,np.newaxis]
+                            * self.dt
+                        + self.ConstraintCoefficient
+                            * max(0,self.InputBounds[0][0]-u[0])**2
+                            * self.dt
+                        + self.ConstraintCoefficient
+                            * max(0,self.InputBounds[1][0]-u[1])**2
+                            * self.dt
+                        + self.ConstraintCoefficient
+                            * max(0,u[0]-self.InputBounds[0][1])**2
+                            * self.dt
+                        + self.ConstraintCoefficient
+                            * max(0,u[1]-self.InputBounds[1][1])**2
+                            * self.dt
+                    ),
                     self.X[:,1:].T,
                     self.U.T
                 )
@@ -391,7 +459,21 @@ class DDP_1DOF_2DOA:
         # returns a list of length len(Time)-1, each element with shape (m,1), where n is the number of states.
         lu = list(
                 map(
-                    lambda x,u: self.R * u[:,np.newaxis] * self.dt,
+                    lambda x,u: (
+                        self.R
+                            * u[:,np.newaxis]
+                            * self.dt
+                        + 2*self.ConstraintCoefficient*np.matrix([
+                            [
+                                max(0,u[0]-self.InputBounds[0][1])
+                                -max(0,self.InputBounds[0][0]-u[0])
+                            ],
+                            [
+                                max(0,u[1]-self.InputBounds[1][1])
+                                -max(0,self.InputBounds[1][0]-u[1])
+                            ]
+                        ]) * self.dt
+                    ),
                     self.X[:,1:].T,
                     self.U.T
                 )
@@ -418,7 +500,25 @@ class DDP_1DOF_2DOA:
         # returns a list of length len(Time)-1, each element with shape (m,m), where m is the number of inputs.
         luu = list(
                 map(
-                    lambda x,u: self.R*self.dt,
+                    lambda x,u: (
+                        self.R*self.dt
+                        + 2*self.ConstraintCoefficient*np.matrix([
+                            [
+                                (
+                                    np.heaviside(u[0]-self.InputBounds[0][1],0.5)
+                                    -np.heaviside(self.InputBounds[0][0]-u[0],0.5)
+                                ),
+                                0
+                            ],
+                            [
+                                0,
+                                (
+                                    np.heaviside(u[1]-self.InputBounds[1][1],0.5)
+                                    -np.heaviside(self.InputBounds[1][0]-u[1],0.5)
+                                )
+                            ]
+                        ]) * self.dt
+                    ),
                     self.X[:,1:].T,
                     self.U.T
                 )
@@ -442,7 +542,26 @@ class DDP_1DOF_2DOA:
 
         RunningCost = 0
         for j in range(self.Horizon-1):
-            RunningCost = RunningCost + 0.5 * self.U[:,np.newaxis,j].T * self.R * self.U[:,np.newaxis,j] * self.dt
+            RunningCost = (
+                RunningCost
+                + 0.5
+                    * self.U[:,np.newaxis,j].T
+                    * self.R
+                    * self.U[:,np.newaxis,j]
+                    * self.dt
+                + self.ConstraintCoefficient
+                    * max(0,self.InputBounds[0][0]-self.U[0,j])**2
+                    * self.dt
+                + self.ConstraintCoefficient
+                    * max(0,self.InputBounds[1][0]-self.U[1,j])**2
+                    * self.dt
+                + self.ConstraintCoefficient
+                    * max(0,self.U[0,j]-self.InputBounds[0][1])**2
+                    * self.dt
+                + self.ConstraintCoefficient
+                    * max(0,self.U[1,j]-self.InputBounds[1][1])**2
+                    * self.dt
+            )
 
         TerminalCost = (
             (np.matrix(self.X[:,np.newaxis,self.Horizon-1]) - self.p_target).T

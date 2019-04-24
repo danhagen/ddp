@@ -26,6 +26,7 @@ params = {
             [0,F_MAX1],
             [0,F_MAX2]
         ],
+    "ConstraintCoefficient" : 0,
     "PlotResults" : True,
     "AnimateResults" : True,
     "ReturnAllResults" : True,
