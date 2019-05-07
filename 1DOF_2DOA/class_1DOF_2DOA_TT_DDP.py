@@ -159,6 +159,63 @@ class DDP_1DOF_2DOA:
         # # ReturnAllResults - Boolean to determine if all of the results will be returned.
         # ReturnAllResults = params.get("ReturnAllResults",False)
         # assert type(ReturnAllResults)==bool, "ReturnAllResults must be either True or False (Default)."
+    def find_initial_input(self,Seed=None):
+        """
+        Takes in initial state (self.X_o) of shape (2,) and finds a viable an initial tension (self.U_o) of shape (2,).
+
+        Should be run the first time the class is called, after initialization as the system should begin from rest in the state space, but not necessarily rest in input space.
+        """
+        np.random.seed(Seed)
+
+        b = 2*gr*sin(self.X_o[0])/L1 + 4*self.X_o[1]*b1/(L1**2*M)
+        A = np.matrix([[4*R1(self.X_o)/(L1**2*M),4*R2(self.X_o)/(L1**2*M)]])
+
+        ParticularSolution = np.linalg.pinv(A)*b
+        NormalizedNullSpaceVector = np.matrix([[-R2(self.X_o)],[R1(self.X_o)]])/np.sqrt(R1(self.X_o)**2 + R2(self.X_o)**2)
+
+        k = []
+        IntersectionTensions = []
+        InBounds = []
+        Condition = [
+        	self.InputBounds[1][0],self.InputBounds[0][0],
+        	self.InputBounds[1][1],self.InputBounds[0][1]
+        ]
+        Intercept = [ParticularSolution[i,0] for i in [1,0,1,0]]
+        Slope = [NormalizedNullSpaceVector[i,0] for i in [1,0,1,0]]
+        epsilon = 1e-6
+        for i in range(4):
+        	# satisfied Condition = Slope*k + Intercept
+        	k.append((Condition[i]-Intercept[i])/Slope[i])
+        	IntersectionTensions.append(ParticularSolution+k[-1]*NormalizedNullSpaceVector)
+        	InBounds.append(
+        		(
+        			self.InputBounds[0][0]-epsilon
+        			<= IntersectionTensions[-1][0,0]
+        			<= self.InputBounds[0][1]+epsilon
+        		) and (
+        			self.InputBounds[1][0]-epsilon
+        			<= IntersectionTensions[-1][1,0]
+        			<= self.InputBounds[1][1]+epsilon
+        		)
+        	)
+        assert (np.array(InBounds)==True).any(), "Current Tension IC equation requires infeasible tension levels. [" + self.return_initial_tension.__name__ + "()]"
+        k_bounds = list(sorted(
+        	list(set(
+        		[k[i] for i in list(np.where(np.array(InBounds)==True)[0])]
+        	))
+        ))
+        if len(k_bounds)==1:
+        	k_LB = k_bounds[0]
+        	k_UB = k_bounds[0]
+        else:
+        	k_LB = k_bounds[0]
+        	k_UB = k_bounds[-1]
+
+        Tension_LB = np.linalg.pinv(A)*b + k_LB*NormalizedNullSpaceVector
+        Tension_UB = np.linalg.pinv(A)*b + k_UB*NormalizedNullSpaceVector
+        InitialTension = (Tension_UB-Tension_LB)*np.random.rand() + Tension_LB
+        InitialTension = np.array(InitialTension.T).T
+        self.U = np.concatenate([InitialTension]*(self.Horizon-1),axis=1)
 
     def set_Horizon(self,Horizon):
         """
@@ -430,16 +487,20 @@ class DDP_1DOF_2DOA:
                             * u[:,np.newaxis]
                             * self.dt
                         + self.ConstraintCoefficient
-                            * max(0,self.InputBounds[0][0]-u[0])**2
+                            * np.heaviside(self.InputBounds[0][0]-u[0],0.5)
+                            * (u[0]-self.InputBounds[0][0])**2
                             * self.dt
                         + self.ConstraintCoefficient
-                            * max(0,self.InputBounds[1][0]-u[1])**2
+                            * np.heaviside(u[0] - self.InputBounds[0][1],0.5)
+                            * (u[0]-self.InputBounds[0][1])**2
                             * self.dt
                         + self.ConstraintCoefficient
-                            * max(0,u[0]-self.InputBounds[0][1])**2
+                            * np.heaviside(self.InputBounds[1][0]-u[1],0.5)
+                            * (u[1]-self.InputBounds[1][0])**2
                             * self.dt
                         + self.ConstraintCoefficient
-                            * max(0,u[1]-self.InputBounds[1][1])**2
+                            * np.heaviside(u[1] - self.InputBounds[1][1],0.5)
+                            * (u[1]-self.InputBounds[1][1])**2
                             * self.dt
                     ),
                     self.X[:,1:].T,
@@ -463,16 +524,24 @@ class DDP_1DOF_2DOA:
                         self.R
                             * u[:,np.newaxis]
                             * self.dt
-                        + 2*self.ConstraintCoefficient*np.matrix([
-                            [
-                                max(0,u[0]-self.InputBounds[0][1])
-                                -max(0,self.InputBounds[0][0]-u[0])
-                            ],
-                            [
-                                max(0,u[1]-self.InputBounds[1][1])
-                                -max(0,self.InputBounds[1][0]-u[1])
-                            ]
-                        ]) * self.dt
+                        + np.matrix([
+                            [2*self.ConstraintCoefficient
+                                * np.heaviside(self.InputBounds[0][0]-u[0],0.5)
+                                * (u[0]-self.InputBounds[0][0])
+                                * self.dt
+                            + 2*self.ConstraintCoefficient
+                                * np.heaviside(u[0] - self.InputBounds[0][1],0.5)
+                                * (u[0]-self.InputBounds[0][1])
+                                * self.dt],
+                            [2*self.ConstraintCoefficient
+                                * np.heaviside(self.InputBounds[1][0]-u[1],0.5)
+                                * (u[1]-self.InputBounds[1][0])
+                                * self.dt
+                            + 2*self.ConstraintCoefficient
+                                * np.heaviside(u[1] - self.InputBounds[1][1],0.5)
+                                * (u[1]-self.InputBounds[1][1])
+                                * self.dt]
+                        ])
                     ),
                     self.X[:,1:].T,
                     self.U.T
@@ -502,22 +571,26 @@ class DDP_1DOF_2DOA:
                 map(
                     lambda x,u: (
                         self.R*self.dt
-                        + 2*self.ConstraintCoefficient*np.matrix([
+                        + np.matrix([
                             [
-                                (
-                                    np.heaviside(u[0]-self.InputBounds[0][1],0.5)
-                                    -np.heaviside(self.InputBounds[0][0]-u[0],0.5)
-                                ),
+                                2*self.ConstraintCoefficient
+                                    * np.heaviside(self.InputBounds[0][0]-u[0],0.5)
+                                    * self.dt
+                                + 2*self.ConstraintCoefficient
+                                    * np.heaviside(u[0] - self.InputBounds[0][1],0.5)
+                                    * self.dt,
                                 0
                             ],
                             [
                                 0,
-                                (
-                                    np.heaviside(u[1]-self.InputBounds[1][1],0.5)
-                                    -np.heaviside(self.InputBounds[1][0]-u[1],0.5)
-                                )
+                                2*self.ConstraintCoefficient
+                                    * np.heaviside(self.InputBounds[1][0]-u[1],0.5)
+                                    * self.dt
+                                + 2*self.ConstraintCoefficient
+                                    * np.heaviside(u[1] - self.InputBounds[1][1],0.5)
+                                    * self.dt
                             ]
-                        ]) * self.dt
+                        ])
                     ),
                     self.X[:,1:].T,
                     self.U.T
@@ -550,16 +623,20 @@ class DDP_1DOF_2DOA:
                     * self.U[:,np.newaxis,j]
                     * self.dt
                 + self.ConstraintCoefficient
-                    * max(0,self.InputBounds[0][0]-self.U[0,j])**2
+                    * np.heaviside(self.InputBounds[0][0]-self.U[0,j],0.5)
+                    * (self.U[0,j]-self.InputBounds[0][0])**2
                     * self.dt
                 + self.ConstraintCoefficient
-                    * max(0,self.InputBounds[1][0]-self.U[1,j])**2
+                    * np.heaviside(self.U[0,j] - self.InputBounds[0][1],0.5)
+                    * (self.U[0,j]-self.InputBounds[0][1])**2
                     * self.dt
                 + self.ConstraintCoefficient
-                    * max(0,self.U[0,j]-self.InputBounds[0][1])**2
+                    * np.heaviside(self.InputBounds[1][0]-self.U[1,j],0.5)
+                    * (self.U[1,j]-self.InputBounds[1][0])**2
                     * self.dt
                 + self.ConstraintCoefficient
-                    * max(0,self.U[1,j]-self.InputBounds[1][1])**2
+                    * np.heaviside(self.U[1,j] - self.InputBounds[1][1],0.5)
+                    * (self.U[1,j]-self.InputBounds[1][1])**2
                     * self.dt
             )
 
@@ -587,6 +664,7 @@ class DDP_1DOF_2DOA:
         # Initial trajectory:
         assert np.shape(self.X_o)==(2,), "X_o must have shape (2,) not "+str(np.shape(self.X_o))+"."
         self.X = np.zeros((2,self.Horizon))
+        self.X[:,0] = self.X_o
         self.forward_integrate_dynamics()
 
         V = [None]*self.Horizon # Each element must be a (2,1) matrix.

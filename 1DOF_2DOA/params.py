@@ -18,15 +18,15 @@ params = {
         ),
     "R" : np.matrix(
             [
-                [2e-3,-1e-3],
-                [-1e-3,2e-3]
+                [1e-3,-0e-3],
+                [-0e-3,1e-3]
             ]
         ),
     "InputBounds" : [
             [0,F_MAX1],
             [0,F_MAX2]
         ],
-    "ConstraintCoefficient" : 0,
+    "ConstraintCoefficient" : 5,
     "PlotResults" : True,
     "AnimateResults" : True,
     "ReturnAllResults" : True,

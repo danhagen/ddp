@@ -22,7 +22,7 @@ import random
 
 NumberOfIterations = 1
 params["dt"] = 0.01
-params["Horizon"] = int(0.2/params["dt"])
+params["Horizon"] = int(0.1/params["dt"])
 params["Time Duration"] = 5
 
 #########################################
@@ -42,7 +42,7 @@ AbsoluteHorizon = params["Horizon"]
 
 params["LearningRate"] = 0.2
 
-X_o = np.array([0,0])
+X_o = np.array([np.pi/12,0])
 X[:,0] = X_o
 
 Time = np.arange(0,params["Time Duration"]+params["dt"],params["dt"])
@@ -54,6 +54,8 @@ statusbar = dsb(0,int(params["Time Duration"]/params["dt"]),
     )
 ## --> Initialize DDP from initial state (X_o) with Horizon = Horizon and U_o = np.zeros((Horizon,))
 DDP = DDP_1DOF_2DOA(X_o,**params)
+DDP.find_initial_input(Seed=None) # Only run if X_o is not [0,_]
+U[:,0] = DDP.U[:,0]
 for i in range(int(params["Time Duration"]/params["dt"])):
     ## --> Run DDP from (current) initial state (X_o) with Horizon = (Horizon-i)
     DDP.run_ddp()

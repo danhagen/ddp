@@ -1,0 +1,32 @@
+[Create 2019/04/25 at 10:06.33]
+
+##############################
+########### Notes ############
+##############################
+
+		SUCCESS! There was an error using the Courant quadratic penalty function, implemented with max(0,x-p)**2. When taking higher derivatives, the value of the derivative have a erroneous negative sign. System now converges, but with chatter.
+
+##############################
+######### Parameters #########
+##############################
+
+		Horizon: 10
+		SimulationDuration: 10
+		dt: 0.01
+		U_o: None
+		p_target: [[0.78539816]
+ [0.        ]]
+		LearningRate: 0.2
+		Q_f: [[500   0]
+ [  0  50]]
+		R: [[ 0.001 -0.   ]
+ [-0.     0.001]]
+		InputBounds: [[0, 1059.9], [0, 2047.1]]
+		ConstraintCoefficient: 5
+		PlotResults: True
+		AnimateResults: True
+		ReturnAllResults: True
+		NumberOfIterations: 1
+		Time Duration: 5
+
+##############################
