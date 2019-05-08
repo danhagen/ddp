@@ -18,8 +18,8 @@ params = {
         ),
     "R" : np.matrix(
             [
-                [1e-3,-0e-3],
-                [-0e-3,1e-3]
+                [2e-3,-1e-3],
+                [-1e-3,2e-3]
             ]
         ),
     "InputBounds" : [
