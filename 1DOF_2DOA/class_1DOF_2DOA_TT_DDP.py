@@ -6,7 +6,7 @@
 #######################################################
 ##                                                   ##
 ## Course: DDP Derivation and Control System Studies ##
-##                 Author: Hagen, Daniel             ##
+##               Author: Hagen, Daniel               ##
 ##                                                   ##
 #######################################################
 #######################################################
@@ -25,6 +25,7 @@ from cost_function import *
 from animate import *
 from plot import *
 from danpy.sb import dsb
+from useful_functions import *
 import time
 
 class DDP_1DOF_2DOA:
@@ -78,13 +79,7 @@ class DDP_1DOF_2DOA:
 
         # dt - Discrete timestep
         self.dt = params.get("dt",0.01)
-        assert str(type(self.dt)) in [
-                "<class 'int'>",
-                "<class 'float'>",
-                "<class 'float32'>",
-                "<class 'float64'>",
-                "<class 'numpy.float'>"], \
-            "dt must be an int, float, float32, float64, or numpy.float not "+str(type(self.dt))+". Default is 0.01."
+        is_number(self.dt,"dt",default=0.01)
 
         # U_o - Initial input to the system.
         self.U_o = params.get("U_o",None)
@@ -102,14 +97,12 @@ class DDP_1DOF_2DOA:
 
         # LearningRate - rate at which the system converges to the new input.
         self.LearningRate = params.get("LearningRate",0.2)
-        assert (str(type(self.LearningRate)) in [
-                "<class 'int'>",
-                "<class 'float'>",
-                "<class 'float32'>",
-                "<class 'float64'>",
-                "<class 'numpy.float'>"]
-                and (0<self.LearningRate<=1)), \
-            "LearningRate must be an int, float, float32, float64, or numpy.float not "+str(type(self.LearningRate))+", and should be between 0 and 1. Default is 0.2."
+        is_number(
+            self.LearningRate,
+            "LearningRate",
+            default=0.2,
+            notes="Should be between 0 and 1."
+        )
 
         # Q_f - Terminal cost matrix
         self.Q_f = params.get("Q_f",50*np.matrix(np.eye(2)))
@@ -135,13 +128,7 @@ class DDP_1DOF_2DOA:
 
         # ConstraintCoefficient - Coefficient for quadratic penalty function.
         self.ConstraintCoefficient = params.get("ConstraintCoefficient",0)
-        assert str(type(self.ConstraintCoefficient)) in [
-                "<class 'int'>",
-                "<class 'float'>",
-                "<class 'float32'>",
-                "<class 'float64'>",
-                "<class 'numpy.float'>"], \
-            "ConstraintCoefficient must be an int, float, float32, float64, or numpy.float not "+str(type(self.ConstraintCoefficient))+". Default is 0."
+        is_number(self.ConstraintCoefficient,"ConstraintCoefficient",default=0)
         assert self.ConstraintCoefficient>=0, \
             "ConstraintCoefficient must positive or zero (Currently  "+str(type(self.ConstraintCoefficient))+"). Default is 0."
 
@@ -182,7 +169,7 @@ class DDP_1DOF_2DOA:
         ]
         Intercept = [ParticularSolution[i,0] for i in [1,0,1,0]]
         Slope = [NormalizedNullSpaceVector[i,0] for i in [1,0,1,0]]
-        epsilon = 1e-6
+        epsilon = 1e-3
         for i in range(4):
         	# satisfied Condition = Slope*k + Intercept
         	k.append((Condition[i]-Intercept[i])/Slope[i])
@@ -236,13 +223,7 @@ class DDP_1DOF_2DOA:
         dt - Discrete timestep. Must be either an int, float, float32, float64, or numpy.float. Default is 0.01. (NOTE: Simulation ends at t = Horizon*dt)
         """
         self.dt = dt
-        assert str(type(self.dt)) in [
-                "<class 'int'>",
-                "<class 'float'>",
-                "<class 'float32'>",
-                "<class 'float64'>",
-                "<class 'numpy.float'>"], \
-            "dt must be an int, float, float32, float64, or numpy.float not "+str(type(self.dt))+". Default is 0.01."
+        is_number(self.dt,"dt",default=0.01)
     def set_U_o(self,U_o):
         """
         U_o - Initial input to the system. Must be either None (meaning zero initial input to the system) or an array with shape (2,Horizon-1). Default is None.
@@ -272,14 +253,12 @@ class DDP_1DOF_2DOA:
         LearningRate - rate at which the system converges to the new input. Must be either an int, float, float32, float64, or numpy.float and must be between 0 and 1. Default is 0.2.
         """
         self.LearningRate = LearningRate
-        assert (str(type(self.LearningRate)) in [
-                "<class 'int'>",
-                "<class 'float'>",
-                "<class 'float32'>",
-                "<class 'float64'>",
-                "<class 'numpy.float'>"]
-                and (0<self.LearningRate<=1)), \
-            "LearningRate must be an int, float, float32, float64, or numpy.float not "+str(type(self.LearningRate))+", and should be between 0 and 1. Default is 0.2."
+        is_number(
+            self.LearningRate,
+            "LearningRate",
+            default=0.2,
+            notes="Should be between 0 and 1."
+        )
     def set_Q_f(self,Q_f):
         """
         Q_f - Terminal cost matrix. Must be a (2,2) numpy matrix. Default is 50*numpy.matrix(numpy.eye(2)). Each element should be positive.
@@ -314,13 +293,7 @@ class DDP_1DOF_2DOA:
         #  -
         """
         self.ConstraintCoefficient = ConstraintCoefficient
-        assert str(type(self.ConstraintCoefficient)) in [
-                "<class 'int'>",
-                "<class 'float'>",
-                "<class 'float32'>",
-                "<class 'float64'>",
-                "<class 'numpy.float'>"], \
-            "ConstraintCoefficient must be an int, float, float32, float64, or numpy.float not "+str(type(self.ConstraintCoefficient))+". Default is 0."
+        is_number(self.ConstraintCoefficient,"ConstraintCoefficient",default=0)
         assert self.ConstraintCoefficient>=0, \
             "ConstraintCoefficient must positive or zero (Currently  "+str(type(self.ConstraintCoefficient))+"). Default is 0."
 
@@ -436,7 +409,143 @@ class DDP_1DOF_2DOA:
             "B must be a (2,2) numpy matrix. Not " + str(type(B)) + " of shape " + str(np.shape(B)) + "."
 
         return(B)
-    def return_linearized_dynamics_matrices(self):
+    def return_Fxx(self,x,u):
+        """
+        Takes in the state vector (X), the input vector (U) and returns the hessian of F in x.
+
+        NOTE: Although you can spend the time to calculate the explicit definitions of the derivatives of the state equations. This is unnecessary for real time control (especially when the state equations may not be perfect to begin with!). Instead, we can approximate the derivative by the difference quotient. For explicit functions, please see functions below (unused).
+
+        #######################
+        ##### NEED TO DO: #####
+        #######################
+
+        [ ] - Create tests that ensure that X and U are the correct dimensions.
+        [ ] - Create tests to make sure that the outputs are of the correct sizes.
+        """
+        assert (str(type(x)) in ["<class 'numpy.ndarray'>"]
+                and np.shape(x)==(2,)), "Error with the type and shape of x ["+ return_Fxx.__name__+"()]."
+        assert (str(type(u)) in ["<class 'numpy.ndarray'>"]
+                and np.shape(u)==(2,)), "Error with the type and shape of u ["+ return_Fxx.__name__+"()]."
+
+        # Removed the U split into two scalars because U is already a scalar.
+
+        h1 = np.array([h,0])
+        h2 = np.array([0,h])
+
+        # Build the Fxx matrix
+
+        F1_11 = 0 # ∂²F₁/(∂x₁²)⋅dx₁² = 0
+        F1_12 = 0 # ∂²F₁/(∂x₁⋅∂x₂)⋅dx₁⋅dx₂ = 0
+        F1_21 = F1_12 # ∂²F₁/(∂x₂⋅∂x₁)⋅dx₂⋅dx₁ = 0
+        F1_22 = 0 # ∂²F₁/(∂x₂²)⋅dx₂² = 0
+
+        # F2 is the angular acceleration of the pendulum.
+        F2_11 = (F2(x,u)-2*F2(x-h1,u)+F2(x-2*h1,u))/(h**2) # ∂²F₂/(∂x₁²)⋅dx₁²
+        F2_12 = (F2(x,u)-F2(x-h1,u)-F2(x-h2,u)+F2(x-h1-h2,u))/(h**2) # ∂²F₂/(∂x₁⋅∂x₂)⋅dx₁⋅dx₂
+        F2_21 = F2_12 # ∂²F₂/(∂x₂⋅∂x₁)⋅dx₂⋅dx₁
+        F2_22 = (F2(x,u)-2*F2(x-h2,u)+F2(x-2*h2,u))/(h**2) # ∂²F₂/(∂x₂²)⋅dx₂²
+
+        Fxx = np.array([
+            [
+                [F1_11,F1_12],
+                [F1_21,F1_22]
+            ],
+            [
+                [F2_11,F2_12],
+                [F2_21,F2_22]
+            ],
+        ])
+        dFxx = Fxx*self.dt
+        assert np.shape(dFxx)==(2,2,2) \
+            and str(type(dFxx))=="<class 'numpy.ndarray'>", \
+        "dFxx must be a (2,2,2) numpy ndarray. Not " + str(type(dFxx)) + " of shape " + str(np.shape(dFxx)) + "."
+        return(dFxx)
+    def return_Fux(self,x,u):
+        """
+        Takes in the state vector (X), the input vector (U) and returns the hessian of F in x and u.
+
+        NOTE: Although you can spend the time to calculate the explicit definitions of the derivatives of the state equations. This is unnecessary for real time control (especially when the state equations may not be perfect to begin with!). Instead, we can approximate the derivative by the difference quotient. For explicit functions, please see functions below (unused).
+
+        #######################
+        ##### NEED TO DO: #####
+        #######################
+
+        [ ] - Create tests that ensure that X and U are the correct dimensions.
+        [ ] - Create tests to make sure that the outputs are of the correct sizes.
+        """
+        assert (str(type(x)) in ["<class 'numpy.ndarray'>"]
+                and np.shape(x)==(2,)), "Error with the type and shape of x ["+ return_Fxx.__name__+"()]."
+        assert (str(type(u)) in ["<class 'numpy.ndarray'>"]
+                and np.shape(u)==(2,)), "Error with the type and shape of u ["+ return_Fxx.__name__+"()]."
+
+        # Removed the U split into two scalars because U is already a scalar.
+
+        h1 = np.array([h,0])
+        h2 = np.array([0,h])
+
+        # Build the Fxx matrix
+
+        F1_1u = 0 # ∂²F₁/(∂x₁⋅∂u)⋅dx₁⋅du = 0
+        F1_2u = 0 # ∂²F₁/(∂x₂⋅∂u)⋅dx₂⋅du = 0
+
+        # F2 is the angular acceleration of the pendulum.
+        F2_1u =(F2(x,u)-F2(x-h1,u)-F2(x,u-h)+F2(x-h1,u-h))/(h**2) # ∂²F₂/(∂x₁∂u)⋅dx₁⋅du
+        F2_2u = (F2(x,u)-F2(x-h2,u)-F2(x,u-h)+F2(x-h2,u-h))/(h**2) # ∂²F₂/(∂x₂⋅∂u)⋅dx₂⋅du
+
+        Fux = np.array([
+            [
+                [F1_1u,F1_2u]
+            ],
+            [
+                [F2_1u,F2_2u]
+            ],
+        ])
+        dFux = Fux*self.dt
+        assert np.shape(dFux)==(2,1,2) \
+            and str(type(dFux))=="<class 'numpy.ndarray'>", \
+        "dFux must be a (2,1,2) numpy ndarray. Not " + str(type(dFux)) + " of shape " + str(np.shape(dFux)) + "."
+        return(dFux)
+    def return_Fuu(self,x,u):
+        """
+        Takes in the state vector (X), the input vector (U) and returns the hessian of F in u.
+
+        NOTE: Although you can spend the time to calculate the explicit definitions of the derivatives of the state equations. This is unnecessary for real time control (especially when the state equations may not be perfect to begin with!). Instead, we can approximate the derivative by the difference quotient. For explicit functions, please see functions below (unused).
+
+        #######################
+        ##### NEED TO DO: #####
+        #######################
+
+        [ ] - Create tests that ensure that X and U are the correct dimensions.
+        [ ] - Create tests to make sure that the outputs are of the correct sizes.
+        """
+        assert (str(type(x)) in ["<class 'numpy.ndarray'>"]
+                and np.shape(x)==(2,)), "Error with the type and shape of x ["+ return_Fxx.__name__+"()]."
+        assert (str(type(u)) in ["<class 'numpy.ndarray'>"]
+                and np.shape(u)==(2,)), "Error with the type and shape of u ["+ return_Fxx.__name__+"()]."
+
+        # Removed the U split into two scalars because U is already a scalar.
+
+        # Build the Fuu matrix
+
+        F1_uu = 0 # ∂²F₁/∂u²⋅du² = 0
+
+        # F2 is the angular acceleration of the pendulum.
+        F2_uu =(F2(x,u)-2*F2(x,u-h)+F2(x,u-2*h))/(h**2) # ∂²F₂/∂u²⋅du² = 0
+
+        Fuu = np.array([
+            [
+                [F1_uu]
+            ],
+            [
+                [F2_uu]
+            ],
+        ])
+        dFuu = Fuu*self.dt
+        assert np.shape(dFuu)==(2,1,1) \
+            and str(type(dFuu))=="<class 'numpy.ndarray'>", \
+        "dFuu must be a (2,1,1) numpy ndarray. Not " + str(type(dFuu)) + " of shape " + str(np.shape(dFuu)) + "."
+        return(dFuu)
+    def return_linearized_dynamics_matrices(self,**params):
         """
         Takes in the input U and the the corresponding output X, as well as dt and returns two lists that contain the linearized dynamic matrices for each timestep for range(len(Time)-1).
 
@@ -457,22 +566,50 @@ class DDP_1DOF_2DOA:
 
         ##########################
         """
+        SecondOrder = params.get("SecondOrder",False)
+        assert type(SecondOrder)==bool, "SecondOrder must be either true or false (default)."
+
         Phi = list(
-                map(
-                    lambda x,u: self.return_Phi(x,u),
-                    self.X[:,:-1].T,
-                    self.U.T
-                )
+            map(
+                lambda x,u: self.return_Phi(x,u),
+                self.X[:,:-1].T,
+                self.U.T
             )
+        )
 
         B = list(
+            map(
+                lambda x,u: self.return_B(x,u),
+                self.X[:,:-1].T,
+                self.U.T
+            )
+        )
+
+        if SecondOrder==True:
+            dFxx = list(
                 map(
-                    lambda x,u: self.return_B(x,u),
+                    lambda x,u: self.return_Fxx(x,u),
                     self.X[:,:-1].T,
                     self.U.T
                 )
             )
-        return(Phi,B)
+            dFux = list(
+                map(
+                    lambda x,u: self.return_Fux(x,u),
+                    self.X[:,:-1].T,
+                    self.U.T
+                )
+            )
+            dFuu = list(
+                map(
+                    lambda x,u: self.return_Fuu(x,u),
+                    self.X[:,:-1].T,
+                    self.U.T
+                )
+            )
+            return(Phi,B,dFxx,dFux,dFuu)
+        else:
+            return(Phi,B)
 
     def return_quadratic_cost_function_expansion_variables(self):
         """
@@ -688,8 +825,10 @@ class DDP_1DOF_2DOA:
             #> Quadratic Approximations of the cost function >
             #------------------------------------------------>
 
-            Phi,B = self.return_linearized_dynamics_matrices()
-            l,lx,lu,lux,lxu,luu,lxx = self.return_quadratic_cost_function_expansion_variables()
+            Phi,B,dFxx,dFux,dFuu = \
+                self.return_linearized_dynamics_matrices(**params)
+            l,lx,lu,lux,lxu,luu,lxx = \
+                self.return_quadratic_cost_function_expansion_variables()
 
             #------------------------------------------------>
             #--------------> Find the controls -------------->
@@ -713,15 +852,24 @@ class DDP_1DOF_2DOA:
                 Qxu[j] = (
                     lxu[j]
                     + Phi[j].T * Vxx[j+1] * B[j]
+                    + 0.1*np.matrix(
+                        np.tensordot(np.array(Vx[j+1]).T,dFux[j],axes=1)
+                    ).T
                 )
                 Qux[j] = Qxu[j].T
                 Quu[j] = (
                     luu[j]
                     + B[j].T * Vxx[j+1] * B[j]
+                    + 0.1*np.matrix(
+                        np.tensordot(np.array(Vx[j+1]).T,dFuu[j],axes=1)
+                    )
                 )
                 Qxx[j] = (
                     lxx[j]
                     + Phi[j].T * Vxx[j+1] * Phi[j]
+                    + 0.1*np.matrix(
+                        np.tensordot(np.array(Vx[j+1]).T,dFxx[j],axes=1)
+                    )
                 )
 
                 Quu_inv[j] = Quu[j]**(-1)
@@ -741,6 +889,11 @@ class DDP_1DOF_2DOA:
                 dU = -Quu_inv[i]*(Qu[i] + Qux[i]*dX)
                 dX = Phi[i]*dX + B[i]*dU
                 U_new[:,i] = (self.U[:,np.newaxis,i] + self.LearningRate*dU).squeeze()
+
+                # Uncomment to use the Tassa et al. equation.
+                # dU = -self.LearningRate*Quu_inv[i]*Qu[i] - Quu_inv[i]*Qux[i]*dX
+                # dX = Phi[i]*dX + B[i]*dU
+                # U_new[:,i] = (self.U[:,np.newaxis,i] + dU).squeeze()
 
             self.U = U_new
 

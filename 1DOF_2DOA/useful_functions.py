@@ -4,6 +4,35 @@ import matplotlib._pylab_helpers
 from matplotlib.backends.backend_pdf import PdfPages
 import time
 
+def is_number(x,VarName,**kwargs):
+    assert type(VarName)==str, "VarName must be a string."
+    default = kwargs.get('default',None)
+    notes = kwargs.get("notes","")
+    assert type(notes)==str, "notes must be a string."
+    if (default is None):
+        assert str(type(x)) in [
+                "<class 'int'>",
+                "<class 'float'>",
+                "<class 'float32'>",
+                "<class 'float64'>",
+                "<class 'numpy.float'>"], \
+            VarName + " must be an int, float, float32, float64, or numpy.float not "+str(type(x))+". " + notes
+    else:
+        assert str(type(default)) in [
+                "<class 'int'>",
+                "<class 'float'>",
+                "<class 'float32'>",
+                "<class 'float64'>",
+                "<class 'numpy.float'>"], \
+            "default must be an int, float, float32, float64, or numpy.float not "+str(type(default))+"."
+        assert str(type(x)) in [
+                "<class 'int'>",
+                "<class 'float'>",
+                "<class 'float32'>",
+                "<class 'float64'>",
+                "<class 'numpy.float'>"], \
+            VarName + " must be an int, float, float32, float64, or numpy.float not "+str(type(x))+". Default is " + str(default) + ". " + notes
+
 def save_figures(Destination,BaseFileName,params,ReturnPath=False,**kwargs):
     """
 

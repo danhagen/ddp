@@ -40,7 +40,7 @@ params["NumberOfIterations"] = NumberOfIterations
 
 AbsoluteHorizon = params["Horizon"]
 
-params["LearningRate"] = 0.2
+params["LearningRate"] = 0.2 # change to 1 if using Tassa et al equation
 
 X_o = np.array([np.pi/12,0])
 X[:,0] = X_o
