@@ -5,6 +5,7 @@ from matplotlib.patches import Ellipse
 import matplotlib.animation as animation
 import matplotlib.patches as patches
 from scipy import signal
+import argparse
 
 """
 Notes:
@@ -1083,3 +1084,35 @@ RunningCost = ["Minimize Input Energy",
 
 TerminalCost = ["Minimize final angle from target angle",
                 "Minimize final angular velocity from target angular velocity"][:]
+
+if __name__=="__main__":
+    ### Additional Arguments?
+    parser = argparse.ArgumentParser(
+        prog = "<filename>",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent('''\
+        -----------------------------------------------------------------------------
+
+        ddp_simple_pendulum.py
+
+        -----------------------------------------------------------------------------
+
+        Control the position of a simple pendulum by differential dynamic programming.
+
+        -----------------------------------------------------------------------------'''),
+        epilog=textwrap.dedent('''\
+        -----------------------------------------------------------------------------
+
+        Written by Daniel A. Hagen (2018/08/20)
+
+        -----------------------------------------------------------------------------'''
+        )
+    )
+    parser.add_argument(
+        '--animate',
+        action="store_true",
+        help='Animate the results.'
+    )
+    args = parser.parse_args()
+    animate = args.animate
+    simple_pendulum_ddp(Animate=animate)
