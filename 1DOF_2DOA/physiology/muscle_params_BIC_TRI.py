@@ -75,12 +75,18 @@ dr12_dθ2 = dR_Transpose[0,1]
 # d2r11_dθ12 = d2R_Transpose[0,0]
 d2r12_dθ22 = d2R_Transpose[0,1]
 
+# def R1(X):
+# 	return(r12(X[0])) #
+# def dR1_dx1(X):
+# 	return(dr12_dθ2(X[0]))
+# def d2R1_dx12(X):
+# 	return(d2r12_dθ22(X[0]))
 def R1(X):
-	return(r12(X[0])) #
+	return(0.05) #
 def dR1_dx1(X):
-	return(dr12_dθ2(X[0]))
+	return(0)
 def d2R1_dx12(X):
-	return(d2r12_dθ22(X[0]))
+	return(0)
 
 ##########################################
 ############## TRI SETTINGS ##############
@@ -119,12 +125,18 @@ dr22_dθ2 = dR_Transpose[1,1]
 # d2r21_dθ12 = d2R_Transpose[1,0]
 d2r22_dθ22 = d2R_Transpose[1,1]
 
+# def R2(X):
+# 	return(r22(X[1]))
+# def dR2_dx1(X):
+# 	return(dr22_dθ2(X[1]))
+# def d2R2_dx12(X):
+# 	return(d2r22_dθ22(X[1]))
 def R2(X):
-	return(r22(X[1]))
+	return(-0.05)
 def dR2_dx1(X):
-	return(dr22_dθ2(X[1]))
+	return(0)
 def d2R2_dx12(X):
-	return(d2r22_dθ22(X[1]))
+	return(0)
 
 ##########################################
 ##########################################

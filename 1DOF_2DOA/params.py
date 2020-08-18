@@ -1,4 +1,5 @@
 import numpy as np
+from physiology.muscle_params_BIC_TRI import *
 
 # params dictionary
 
@@ -8,7 +9,7 @@ params = {
     "dt" : 0.01,
     "U_o" : None,
     "p_target" : np.matrix([[np.pi/4,0]]).T,
-    "LearningRate" : 0.2,
+    "LearningRate" : 1,
     "Q_f" : np.matrix(
             [
                 [500,0],
@@ -21,10 +22,16 @@ params = {
                 [-1e-3,2e-3]
             ]
         ),
+    "InputBounds" : [
+            [0,F_MAX1],
+            [0,F_MAX2]
+        ],
+    "ConstraintCoefficient" : 5,
     "PlotResults" : True,
     "AnimateResults" : True,
     "ReturnAllResults" : True,
-    "NumberOfIterations" : 100
+    "NumberOfIterations" : 100,
+    "SecondOrder":True
 }
 
 # h is the step used to determine the derivative

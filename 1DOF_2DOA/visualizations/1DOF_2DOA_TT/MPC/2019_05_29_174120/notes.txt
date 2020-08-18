@@ -1,0 +1,32 @@
+[Created 2019/05/29 at 17:41.20]
+
+##############################
+########### Notes ############
+##############################
+
+		Upon reading the DDP description from Tassa et al (2014), I changed the self.LearningRate parameter to 1 and only applied it to the feedforward modification -Quu_inv*Qu. The paper notes that this should be set at one and then iteratively decreased for the DDP algorithm, but as this is a shooting method at each timestep, I am leaving this as one for the single iteration that is run at each timestep. It appears that this had a similar effect as it did for the DDP iteration, where the optimal solution was converged to very quickly. Unfortunately, this global minimum has zero tension on the opposing tendon.
+
+##############################
+######### Parameters #########
+##############################
+
+		Horizon: 10
+		SimulationDuration: 10
+		dt: 0.01
+		U_o: None
+		p_target: [[0.78539816]
+ [0.        ]]
+		LearningRate: 1
+		Q_f: [[500   0]
+ [  0  50]]
+		R: [[ 0.002 -0.001]
+ [-0.001  0.002]]
+		InputBounds: [[0, 1059.9], [0, 2047.1]]
+		ConstraintCoefficient: 5
+		PlotResults: True
+		AnimateResults: True
+		ReturnAllResults: True
+		NumberOfIterations: 1
+		Time Duration: 5
+
+##############################
